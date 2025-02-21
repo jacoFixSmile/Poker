@@ -23,8 +23,10 @@
             <input type="text" id="fname" name="fname" value="John"><br>
             <input type="button" value="Submit" onclick="add_user()">
         </form>
-        <img id="card_placeholder" src="cards/normal/10_of_clubs.png" />
+        <img id="card_placeholder" src="/cards/normal/10_of_clubs.png" />
     </main>
+    <h2>🟢 Online Players</h2>
+    <ul id="playersList"></ul>
     <script>
         cards = [
             [
@@ -63,7 +65,7 @@
         function clock() {
             counter += 1
             document.getElementById("counter").innerHTML = counter;
-            document.getElementById("card_placeholder").src='cards/normal/'+ cards[counter % 4][counter % 10]
+            document.getElementById("card_placeholder").src = '/cards/normal/' + cards[counter % 4][counter % 10]
         }
         function add_user() {
             user_name_html = document.getElementById('fname')
@@ -81,7 +83,25 @@
 
 
         }
+        // get players 
+        async function fetchPlayers() {
+            const response = await fetch('/players');
+            const players = await response.json();
+            const list = document.getElementById('playersList');
+            list.innerHTML = '';
+            players.forEach(player => {
+                const li = document.createElement('li');
+                li.textContent = `${player.name} - Chips: ${player.chips}`;
+                list.appendChild(li);
+            });
+        }
+        window.onload = () => {
 
+        fetchPlayers();
+        localStorage.setItem("user", "Daan");
+        localStorage.setItem("Id", "0");
+
+        };
     </script>
 </body>
 
