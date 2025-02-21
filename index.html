@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Poker host</title>
+    <link rel="stylesheet" href="./style.css">
+    <link rel="icon" href="./favicon.ico" type="image/x-icon">
+  </head>
+  <body>
+    <main>
+        <h1>Welcome to My Website</h1>  
+        <div id="counter">clock</div>
+        <h2>Users</h2>
+        <ul id="user_list">
+            <li>Daan</li>
+        </ul>
+        <form> 
+            <label for="fname">Name:</label><br>
+            <input type="text" id="fname" name="fname" value="John"><br>   
+            <input type="button" value="Submit" onclick="add_user()">
+        </form>    
+        </main>
+    <script>
+        var counter=0
+        var users = []
+        user_list_html = document.getElementById('user_list')
+        setInterval(clock, 1000);
+        function clock() {
+        counter+=1
+        document.getElementById("counter").innerHTML = counter;
+
+        } 
+        function add_user(){
+            user_name_html=document.getElementById('fname')
+            if(!users.includes(user_name_html.value)){
+                console.log("add users")
+                var entry = document.createElement('li');
+                entry.appendChild(document.createTextNode(user_name_html.value));
+                user_list_html.appendChild(entry);
+                users.push(user_name_html.value)
+
+            }else{
+                alert('User alread added'+user_name_html.value)
+
+            }
+     
+
+        }
+
+    </script>
+  </body>
+</html>

@@ -1,0 +1,16 @@
+{
+    "student": [ 
+      
+       { 
+          "reg-num":"1", 
+          "name": "John", 
+          "lastname": "Thompson" 
+       }, 
+      
+       { 
+          "reg-num":"2", 
+          "name": "Tony", 
+          "lastname": "Byers" 
+       } 
+    ]   
+  }
