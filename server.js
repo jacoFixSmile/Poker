@@ -7,6 +7,9 @@ const server = createServer((req, res) => {
   res.statusCode = 200;
   res.setHeader('Content-Type', 'text/plain');
   res.end('Hello World test');
+  fetch('./test.json')
+  .then((response) => response.json())
+  .then((json) => console.log(json));
 });
 
 server.listen(port, hostname, () => {
