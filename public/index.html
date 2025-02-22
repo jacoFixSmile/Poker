@@ -25,8 +25,12 @@
         </form>
         <img id="card_placeholder" src="/cards/normal/10_of_clubs.png" />
     </main>
-    <h2>🟢 Online Players</h2>
+    <h1>Poker Players</h1>
+    <button onclick="addPlayer()">Add Player</button>
     <ul id="playersList"></ul>
+
+    <h2>🟢 Online Players</h2>
+    <ul id="onlinePlayers"></ul>
     <script>
         cards = [
             [
@@ -59,30 +63,13 @@
         ]
 
         var counter = 0
-        var users = []
-        user_list_html = document.getElementById('user_list')
-        setInterval(clock, 1000);
-        function clock() {
-            counter += 1
-            document.getElementById("counter").innerHTML = counter;
-            document.getElementById("card_placeholder").src = '/cards/normal/' + cards[counter % 4][counter % 10]
-        }
-        function add_user() {
-            user_name_html = document.getElementById('fname')
-            if (!users.includes(user_name_html.value)) {
-                console.log("add users")
-                var entry = document.createElement('li');
-                entry.appendChild(document.createTextNode(user_name_html.value));
-                user_list_html.appendChild(entry);
-                users.push(user_name_html.value)
+        window.onload = () => {
 
-            } else {
-                alert('User alread added' + user_name_html.value)
+            fetchPlayers();
+            localStorage.setItem("user", "Daan");
+            localStorage.setItem("Id", "0");
 
-            }
-
-
-        }
+        };
         // get players 
         async function fetchPlayers() {
             const response = await fetch('/players');
@@ -95,13 +82,21 @@
                 list.appendChild(li);
             });
         }
-        window.onload = () => {
 
-        fetchPlayers();
-        localStorage.setItem("user", "Daan");
-        localStorage.setItem("Id", "0");
+        async function addPlayer() {
+            const name = prompt('Enter player name:');
 
-        };
+            if (!name) return;
+            await fetch('/players', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },  // ✅ Important header!
+                body: JSON.stringify({ name }),                   // ✅ Send JSON payload
+            });
+            
+
+            // socket.emit('login', name);
+            fetchPlayers();
+        }
     </script>
 </body>
 

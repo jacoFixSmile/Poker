@@ -24,7 +24,18 @@ const db = new sqlite3.Database('./public/poker.db', (err) => {
     console.log('Connected to SQLite database.');
   }
 });
-
+/*
+db.serialize(() => {
+  db.run(`
+    CREATE TABLE IF NOT EXISTS players (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      chips INTEGER DEFAULT 1000
+    )
+  `);
+});
+*/
+app.use(express.json());
 // API route to get all players
 app.get('/players', (req, res) => {
   db.all('SELECT * FROM users', (err, rows) => {
@@ -36,16 +47,18 @@ app.get('/players', (req, res) => {
   });
 });
 
-// API route to add a new player
-app.post('/players', (req, res) => {
+// API: Add a new player
+app.post('/players', async (req, res) => {
+  console.log('Incoming POST request:', req.body); // ✅ Log request body
   const { name } = req.body;
-  if (!name) return res.status(400).json({ error: 'Name is required' });
 
-  db.run('INSERT INTO players (name) VALUES (?)', [name], function (err) {
+  if (!name) return res.status(400).json({ error: 'Name is required' });
+  db.run('INSERT INTO users (name) VALUES (?)', [name], function (err) {
     if (err) {
       res.status(500).json({ error: err.message });
     } else {
       res.json({ id: this.lastID, name, chips: 1000 });
     }
   });
+
 });
