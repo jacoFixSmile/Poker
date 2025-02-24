@@ -64,12 +64,38 @@
 
         var counter = 0
         window.onload = () => {
-
+            getCurrentPlayer();
             fetchPlayers();
-            localStorage.setItem("user", "Daan");
-            localStorage.setItem("Id", "0");
+            
 
         };
+        async function addPlayer() {
+            const name = prompt('Enter player name:');
+
+            if (!name) return;
+            await fetch('/players', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },  // ✅ Important header!
+                body: JSON.stringify({ name }),                   // ✅ Send JSON payload
+            });
+            fetchPlayers();
+
+
+            // socket.emit('login', name);
+        }
+        async function getCurrentPlayer() {
+            var user=localStorage.getItem("user");
+            if ( user !== null && user !== 'undefined'){
+                user=localStorage.getItem("chips");
+                console.log(user)
+            }
+            else
+            {
+                var res;
+                addPlayer(res)
+                console.log(res)
+            }
+        }
         // get players 
         async function fetchPlayers() {
             console.log('fetchPlayers')
@@ -85,20 +111,7 @@
             });
         }
 
-        async function addPlayer() {
-            const name = prompt('Enter player name:');
-
-            if (!name) return;
-            await fetch('/players', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },  // ✅ Important header!
-                body: JSON.stringify({ name }),                   // ✅ Send JSON payload
-            });
-            fetchPlayers();
-
-
-            // socket.emit('login', name);
-        }
+      
     </script>
 </body>
 
