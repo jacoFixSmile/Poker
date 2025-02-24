@@ -72,8 +72,10 @@
         };
         // get players 
         async function fetchPlayers() {
+            console.log('fetchPlayers')
             const response = await fetch('/players');
             const players = await response.json();
+            console.log(players)
             const list = document.getElementById('playersList');
             list.innerHTML = '';
             players.forEach(player => {
@@ -92,10 +94,10 @@
                 headers: { 'Content-Type': 'application/json' },  // ✅ Important header!
                 body: JSON.stringify({ name }),                   // ✅ Send JSON payload
             });
-            
+            fetchPlayers();
+
 
             // socket.emit('login', name);
-            fetchPlayers();
         }
     </script>
 </body>

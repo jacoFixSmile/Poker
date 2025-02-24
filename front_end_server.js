@@ -1,6 +1,7 @@
 const express = require('express');
-const sqlite3 = require('sqlite3').verbose();
 const app = express();
+const fs = require('fs');
+
 const port = 3000;
 
 // Serve static files from the "public" directory
@@ -16,49 +17,53 @@ app.listen(port, () => {
 });
 
 
-// DATABASE
-const db = new sqlite3.Database('./public/poker.db', (err) => {
-  if (err) {
-    console.error('Error opening database:', err.message);
-  } else {
-    console.log('Connected to SQLite database.');
-  }
-});
-/*
-db.serialize(() => {
-  db.run(`
-    CREATE TABLE IF NOT EXISTS players (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT NOT NULL,
-      chips INTEGER DEFAULT 1000
-    )
-  `);
-});
-*/
+
+function parseCSV(csvText) {
+  const lines = csvText.split('\n');
+  const headers = lines[0].split(',');
+  return lines.slice(1).map(line => {
+    const values = line.split(',');
+    return headers.reduce((obj, header, index) => {
+      obj[header.trim()] = values[index]?.trim();
+      return obj;
+    }, {});
+  });
+}
+
 app.use(express.json());
 // API route to get all players
 app.get('/players', (req, res) => {
-  db.all('SELECT * FROM users', (err, rows) => {
+  // Read CSV from a file
+  fs.readFile('.\\public\\test.csv', 'utf8', (err, data) => {
     if (err) {
-      res.status(500).json({ error: err.message });
-    } else {
-      res.json(rows);
+      console.error('Error reading file:', err);
+      return;
     }
+    const parsedData = parseCSV(data);
+    console.log(parsedData)
+    res.json(parsedData);
   });
+
 });
 
 // API: Add a new player
 app.post('/players', async (req, res) => {
-  console.log('Incoming POST request:', req.body); // ✅ Log request body
+  // Append the row to the CSV file
   const { name } = req.body;
-
   if (!name) return res.status(400).json({ error: 'Name is required' });
-  db.run('INSERT INTO users (name) VALUES (?)', [name], function (err) {
+  const newRow = [3, name, 1000];
+  const csvRow = `\n${newRow.join(',')}`;
+  fs.appendFile('.\\public\\test.csv', csvRow, (err) => {
     if (err) {
-      res.status(500).json({ error: err.message });
+      res.status(500).json({ error: err });
+      console.error('Error appending to file:', err);
     } else {
-      res.json({ id: this.lastID, name, chips: 1000 });
+      res.json({ id: 3, name, chips: 1000 });
+      console.log('Row successfully added!');
     }
   });
 
 });
+
+
+
