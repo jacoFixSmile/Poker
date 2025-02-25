@@ -4,7 +4,7 @@ const path = require('path');
 
 const app = express();
 const port = 3000;
-const csvFilePath = path.join(__dirname, 'public', 'test.csv');
+const csvFilePath = path.join(__dirname, 'public', 'users.csv');
 
 app.use(express.static('public'));
 app.use(express.json());
@@ -13,6 +13,8 @@ app.use(express.json());
 app.get('/', (req, res) => {
     res.sendFile(__dirname + '/index.html');
 });
+
+
 
 // Function to parse CSV data
 function parseCSV(csvText) {
@@ -76,7 +78,17 @@ app.post('/players', async (req, res) => {
     });
 });
 
+function ensureCSVExists() {
+  if (!fs.existsSync(csvFilePath)) {
+      console.log('CSV file not found. Creating a new one...');
+      const headers = 'id,name,chips';
+      fs.writeFileSync(csvFilePath, headers, 'utf8');
+  } else {
+  }
+}
+
 // Start the server
 app.listen(port, () => {
     console.log(`Server running at http://localhost:${port}`);
+    ensureCSVExists()
 });
