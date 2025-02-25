@@ -1,11 +1,15 @@
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
-const { Server } = require("socket.io");
+const { Server } = require('socket.io');
+const { createServer } = require('node:http');
 
 const app = express();
 const port = 3000;
 const csvFilePath = path.join(__dirname, 'public', 'users.csv');
+//socket
+const server = createServer(app);
+const io = new Server(server);
 
 app.use(express.static('public'));
 app.use(express.json());
@@ -15,7 +19,9 @@ app.get('/', (req, res) => {
     res.sendFile(__dirname + '/index.html');
 });
 
-
+io.on('connection', (socket) => {
+  console.log('a user connected');
+});
 
 // Function to parse CSV data
 function parseCSV(csvText) {
@@ -92,4 +98,7 @@ function ensureCSVExists() {
 app.listen(port, () => {
     console.log(`Server running at http://localhost:${port}`);
     ensureCSVExists()
+});
+server.listen(3200, () => {
+  console.log('Server running on http://localhost:3200');
 });

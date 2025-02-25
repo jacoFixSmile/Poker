@@ -1,6 +1,10 @@
 # Poker local
 ## Description
 A poker game created to run locally on a phone without internet access. 
+As part of this excerise we try to minimize the amount of package/frameworks we use to get to the end result. For every package we explain why we use it so we don't create a wild grow from packages:
+* axios: for API access between back and front-end
+* express: to render the front-end pages
+* socket: to make the game interactive. Tutorial https://socket.io/docs/v4/tutorial/step-3
 ## Installing
 Setting up termux on phone
 1. Install termux from git or playstore
@@ -35,11 +39,12 @@ Setting up termux on phone
 - [ ] Code cleanup: 
     - [ ] Create a class for every object: Game, Set, Match, card, player, ... 
     - [ ] Remove logging
-<!-- 
+
 
 > [!NOTE]
 > Useful information that users should know, even when skimming content.
-
+ * "rm -rf FolderName" can be used in termux to remove everything from a folder
+<!-- 
 > [!TIP]
 > Helpful advice for doing things better or more easily.
 
