@@ -20,9 +20,9 @@ Setting up termux on phone
     - [X] Display plater
     - [ ] create a player 
         - [X] Post a player to the database
-        - [ ] Check the name isn't used
-        - [ ] Save player info to local storage
-        - [ ] Check if the browser all ready has a user, otherwhise ask to create one.
+        - [X] Check the name isn't used
+        - [X] Save player info to local storage
+        - [X] Check if the browser all ready has a user, otherwhise ask to create one.
         - [ ] 👑 Remove player for admin user
 - [ ] play a match of poker
     - [ ] 👑 reset game (save old csv if). How would you select a user when reloading a game?
