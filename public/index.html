@@ -12,7 +12,8 @@
 
 <body>
     <main>
-        <h1>Welcome to My Website</h1>
+        <h1 id="welcome_sign">Welcome </h1>
+        <h3 id="balance">balance: 0 </h3>
         <div id="counter">clock</div>
         <h2>Users</h2>
         <ul id="user_list">
@@ -66,14 +67,14 @@
         window.onload = () => {
             getCurrentPlayer();
             fetchPlayers();
-            
+
 
         };
         async function addPlayer() {
             const name = prompt('Enter player name:');
 
             if (!name) return;
-            await fetch('/players', {
+            return await fetch('/players', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },  // ✅ Important header!
                 body: JSON.stringify({ name }),                   // ✅ Send JSON payload
@@ -84,18 +85,33 @@
             // socket.emit('login', name);
         }
         async function getCurrentPlayer() {
-            var user=localStorage.getItem("user");
-            if ( user !== null && user !== 'undefined'){
-                user=localStorage.getItem("chips");
-                console.log(user)
+            let user = localStorage.getItem("user");
+
+            if (user && user !== "undefined") {
+                console.log("Existing user:", JSON.parse(user));
+            } else {
+                const name = prompt("Enter your name to create a player:");
+                if (!name) return; // User canceled prompt
+
+                const response = await fetch('/players', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name })
+                });
+
+                if (response.ok) {
+                    const newUser = await response.json();
+                    localStorage.setItem("user", JSON.stringify(newUser));
+                    console.log("New user created:", newUser);
+                } else {
+                    console.error("Failed to create player");
+                }
             }
-            else
-            {
-                var res;
-                addPlayer(res)
-                console.log(res)
-            }
+            document.getElementById('welcome_sign').innerHTML=('Welcome '+(JSON.parse(localStorage.getItem('user')).name))
+            document.getElementById('balance').innerHTML=('Balance $'+(JSON.parse(localStorage.getItem('user')).chips))
+
         }
+
         // get players 
         async function fetchPlayers() {
             console.log('fetchPlayers')
@@ -111,7 +127,7 @@
             });
         }
 
-      
+
     </script>
 </body>
 
