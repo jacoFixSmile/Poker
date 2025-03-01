@@ -8,6 +8,7 @@
     <title>Poker host</title>
     <link rel="stylesheet" href="./style.css">
     <link rel="icon" href="./favicon.ico" type="image/x-icon">
+    <script src="/socket.io/socket.io.js"></script>
 </head>
 
 <body>
@@ -19,13 +20,13 @@
         <ul id="user_list">
             <li>Daan</li>
         </ul>
-        <form>
-            <label for="fname">Name:</label><br>
-            <input type="text" id="fname" name="fname" value="John"><br>
-            <input type="button" value="Submit" onclick="add_user()">
+        <ul id="messages"></ul>
+        <form id="form" action="javascript:void(0);">
+            <input id="input" autocomplete="off" /><button>Send</button>
         </form>
         <img id="card_placeholder" src="/cards/normal/10_of_clubs.png" />
     </main>
+
     <h1>Poker Players</h1>
     <button onclick="addPlayer()">Add Player</button>
     <ul id="playersList"></ul>
@@ -107,8 +108,8 @@
                     console.error("Failed to create player");
                 }
             }
-            document.getElementById('welcome_sign').innerHTML=('Welcome '+(JSON.parse(localStorage.getItem('user')).name))
-            document.getElementById('balance').innerHTML=('Balance $'+(JSON.parse(localStorage.getItem('user')).chips))
+            document.getElementById('welcome_sign').innerHTML = ('Welcome ' + (JSON.parse(localStorage.getItem('user')).name))
+            document.getElementById('balance').innerHTML = ('Balance $' + (JSON.parse(localStorage.getItem('user')).chips))
 
         }
 
@@ -127,8 +128,29 @@
             });
         }
 
+        const socket = io();
 
+        const form = document.getElementById('form');
+        const input = document.getElementById('input');
+        const messages = document.getElementById('messages');
+
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            if (input.value) {
+                socket.emit('chat message', input.value);
+                input.value = '';
+            }
+        });
+
+        socket.on('chat message', (msg) => {
+            const item = document.createElement('li');
+            item.textContent = msg;
+            messages.appendChild(item);
+            window.scrollTo(0, document.body.scrollHeight);
+        });
     </script>
+
 </body>
 
 </html>
