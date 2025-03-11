@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Poker Game</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <link rel="stylesheet" href="./style.css">
+</head>
+
+<body>
+
+    <h1>🃏 Poker Game - Admin Panel</h1>   
+        <h2>Users</h2>
+        <ul id="playersList"></ul>
+    <div>
+        <h1>⚙️ Game settings</h1>
+        <button onclick=" startGame()">Start game</button>
+    </div>
+    <script>   
+    window.onload = () => {
+        fetchPlayers();
+
+
+        };
+        async function fetchPlayers() {
+            console.log('fetchPlayers')
+            const response = await fetch('/players');
+            const players = await response.json();
+            console.log(players)
+            const list = document.getElementById('playersList');
+            list.innerHTML = '';
+            players.forEach(player => {
+                const li = document.createElement('li');
+                li.textContent = `${player.name} - Chips: ${player.chips}`;
+                list.appendChild(li);
+            });
+        }
+        async function startGame(){
+            const response = await fetch('/start_game');
+            const players = await response.json();
+        }
+    </script>
+
+</body>
+
+</html>

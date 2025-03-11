@@ -22,13 +22,13 @@ class Game {
         // check all players have 
         console.log('starting set with:')
         console.log(this.players)
-        this.sets.push(new set(this.players))
+        this.sets.push(new Set(this.players))
     }
     getLastSet(){
         return this.sets[this.sets.length-1]
     }
 }
-class set {
+class Set {
     constructor(players) { //players
         this.players = players
         this.deck = [
@@ -177,6 +177,9 @@ class Player {
     }
 
 }
+
+/*
+testing game
 demo_game = new Game('demo_game')
 demo_game.addPlayer(new Player(1, "Daan", 2000))
 demo_game.addPlayer(new Player(2, "Henk", 2000))
@@ -187,6 +190,8 @@ console.log(current_set)
 current_set.foldPlayer(2)
 current_set.calculateWinner()
 console.log(current_set.players)
+*/
+
 
 // input for testing
 /*
@@ -203,3 +208,5 @@ rl.question(`What's your name?`, name => {
     rl.close();
 });
 */
+
+module.exports = { Player, Game,Set };
