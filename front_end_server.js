@@ -4,7 +4,7 @@ const path = require('path');
 const { Server } = require('socket.io');
 const  { Player, Game,Set } = require('./game'); 
 const { createServer } = require('node:http');
-
+const { DatabaseSync } = require('node:sqlite');
 const app = express();
 const port = 3000;
 const csvFilePath = path.join(__dirname, 'public', 'users.csv');
@@ -14,7 +14,7 @@ const io = new Server(server);
 
 // settings 
 var game;
-
+const database = new DatabaseSync(':memory:');
 
 app.use(express.static('public'));
 app.use(express.json());
