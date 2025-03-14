@@ -118,7 +118,6 @@
             console.log('fetchPlayers')
             const response = await fetch('/players');
             const players = await response.json();
-            console.log(players)
             const list = document.getElementById('playersList');
             list.innerHTML = '';
             players.forEach(player => {

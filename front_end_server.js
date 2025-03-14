@@ -14,7 +14,7 @@ const io = new Server(server);
 
 // settings 
 var game;
-const database = new DatabaseSync(':memory:');
+const database = new DatabaseSync('public/poker.db');
 
 app.use(express.static('public'));
 app.use(express.json());
@@ -26,7 +26,9 @@ app.get('/', (req, res) => {
 app.get('/admin', (req, res) => {
     res.sendFile(__dirname + '/Public/admin.html');
 });
-
+app.get('/lobby', (req, res) => {
+    res.sendFile(__dirname + '/Public/lobby.html');
+});
 // Function to parse CSV data
 function parseCSV(csvText) {
     const lines = csvText.trim().split('\n');
@@ -42,17 +44,11 @@ function parseCSV(csvText) {
 
 // API route to get all players
 app.get('/players', (req, res) => {
-    fs.readFile(csvFilePath, 'utf8', (err, data) => {
-        if (err) {
-            console.error('Error reading file:', err);
-            return res.status(500).json({ error: 'Error reading file' });
-        }
-        const parsedData = parseCSV(data);
-        res.json(parsedData);
-    });
+    const query = database.prepare('SELECT * FROM users');
+     res.json(query.all())
+
 });
 app.get('/start_game', (req, res) => {
-    
     demo_game = new Game('demo_game')
 
 });
@@ -60,37 +56,18 @@ app.get('/start_game', (req, res) => {
 app.post('/players', async (req, res) => {
     const { name } = req.body;
     if (!name) return res.status(400).json({ error: 'Name is required' });
+    // protection against sql insert needed
+    const query = database.prepare(`SELECT * FROM users where name like '${name}'`); 
+    if(query.all().length==0) {
+        const insert = database.prepare('INSERT INTO users (name) VALUES (?)');
+        insert.run(name);
+        const result = database.prepare(`SELECT * FROM users where name like '${name}'`); 
+        res.status(201).json(result.all());
+    }else{
 
-    fs.readFile(csvFilePath, 'utf8', (err, data) => {
-        if (err) {
-            console.error('Error reading file:', err);
-            return res.status(500).json({ error: 'Error reading file' });
-        }
-
-        const players = parseCSV(data);
-
-        // Check if the player already exists
-        const existingPlayer = players.find(player => player.name.toLowerCase() === name.toLowerCase());
-        if (existingPlayer) {
-            return res.status(409).json({ error: 'Player with this name already exists' });
-        }
-
-        // Get the next available ID
-        const nextId = players.length > 0 ? Math.max(...players.map(p => parseInt(p.id))) + 1 : 1;
-        const newRow = [nextId, name, 1000];
-        const csvRow = `\n${newRow.join(',')}`;
-
-        // Append new player to the CSV file
-        fs.appendFile(csvFilePath, csvRow, (err) => {
-            if (err) {
-                console.error('Error appending to file:', err);
-                return res.status(500).json({ error: 'Error adding player' });
-            }
-
-            res.status(201).json({ id: nextId, name, chips: 1000 });
-            console.log(`Player ${name} added with ID ${nextId}`);
-        });
-    });
+        return res.status(500).json({ error: 'Name is already in use' })
+    }
+    
 });
 
 function ensureCSVExists() {
