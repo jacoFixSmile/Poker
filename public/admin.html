@@ -11,16 +11,16 @@
 
 <body>
 
-    <h1>🃏 Poker Game - Admin Panel</h1>   
-        <h2>Users</h2>
-        <ul id="playersList"></ul>
+    <h1>🃏 Poker Game - Admin Panel</h1>
+    <h2>Users</h2>
+    <ul id="playersList"></ul>
     <div>
         <h1>⚙️ Game settings</h1>
         <button onclick=" startGame()">Start game</button>
     </div>
-    <script>   
-    window.onload = () => {
-        fetchPlayers();
+    <script>
+        window.onload = () => {
+            fetchPlayers();
 
 
         };
@@ -33,11 +33,31 @@
             list.innerHTML = '';
             players.forEach(player => {
                 const li = document.createElement('li');
-                li.textContent = `${player.name} - Chips: ${player.chips}`;
+                li.innerHTML = `ID: ${player.id} | ${player.name} - Chips: ${player.chips} 
+            <button onclick="updatePlayer(${player.id})">Update</button> 
+            <button onclick="deletePlayer(${player.id})">Delete</button>`;
                 list.appendChild(li);
             });
         }
-        async function startGame(){
+        async function deletePlayer(id) {
+            if (!confirm(`Are you sure you want to delete player ${id}?`)) return;
+            await fetch(`/players/${id}`, { method: 'DELETE' });
+            fetchPlayers(); // Refresh list after deletion
+        }
+
+        async function updatePlayer(id) {
+            const newChips = prompt("Enter new chip amount:");
+            if (newChips === null || isNaN(newChips)) return alert("Invalid input!");
+
+            await fetch(`/players/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ chips: Number(newChips) })
+            });
+
+            fetchPlayers(); // Refresh list after update
+        }
+        async function startGame() {
             const response = await fetch('/start_game');
             const players = await response.json();
         }

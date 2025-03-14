@@ -79,6 +79,25 @@ app.post('/players', async (req, res) => {
     }
 
 });
+app.delete('/players/:id', async (req, res) => {
+    const { id } = req.params; // Get ID from URL
+
+    if (!id) return res.status(400).json({ error: 'Player ID is required' });
+
+    try {
+        const query = database.prepare('DELETE FROM users WHERE id = ?');
+        const result = query.run(id);
+
+        if (result.changes === 0) {
+            return res.status(404).json({ error: 'Player not found' });
+        }
+
+        res.json({ message: `Player with ID ${id} deleted successfully.` });
+    } catch (error) {
+        console.error('Error deleting player:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
 
 function ensureCSVExists() {
     if (!fs.existsSync(csvFilePath)) {
