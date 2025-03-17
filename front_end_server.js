@@ -17,6 +17,7 @@ const database = new DatabaseSync('public/poker.db');
 // settings game 
 var game;
 
+
 app.use(express.static('public'));
 app.use(express.json());
 
@@ -59,7 +60,7 @@ app.get('/players', (req, res) => {
 app.get('/start_game', (req, res) => {
     console.log("trying to contact lobby")
     io.emit('lobby', 'trying to contact lobby');
-    demo_game = new Game('demo_game')
+    game = new Game('demo_game')
 
 });
 // API: Add a new player
@@ -107,13 +108,27 @@ function ensureCSVExists() {
     } else {
     }
 }
+
+// Store connected users
+let users = {};
 io.on('connection', (socket) => {
-    console.log('a user connected');
+    console.log('A user connected:', socket.id);
+
+    // Listen for user joining
+    socket.on('join', (name) => {
+        users[socket.id] = name;
+        console.log(`${name} connected.`);
+        io.emit('updateUsers', Object.values(users)); // Send updated user list
+    });
+
+    // Handle disconnects
     socket.on('disconnect', () => {
-        console.log('user disconnected');
+        const name = users[socket.id];
+        delete users[socket.id]; // Remove from list
+        console.log(`${name} disconnected.`);
+        io.emit('updateUsers', Object.values(users)); // Update user list
     });
 });
-
 
 server.listen(3000, () => {
     ensureCSVExists()

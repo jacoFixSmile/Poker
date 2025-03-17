@@ -102,7 +102,7 @@
 
                 if (response.ok) {
                     const newUser = await response.json();
-                    localStorage.setItem("user", JSON.stringify(newUser));
+                    localStorage.setItem("user", JSON.stringify(newUser[0]));
                     console.log("New user created:", newUser);
                 } else {
                     console.error("Failed to create player");
@@ -110,6 +110,7 @@
             }
             document.getElementById('welcome_sign').innerHTML = ('Welcome ' + (JSON.parse(localStorage.getItem('user')).name))
             document.getElementById('balance').innerHTML = ('Balance $' + (JSON.parse(localStorage.getItem('user')).chips))
+            joinGame()
 
         }
 
@@ -129,25 +130,13 @@
 
         const socket = io();
 
-        const form = document.getElementById('form');
-        const input = document.getElementById('input');
-        const messages = document.getElementById('messages');
-
-
-        form.addEventListener('submit', (e) => {
-            e.preventDefault();
-            if (input.value) {
-                socket.emit('chat message', input.value);
-                input.value = '';
-            }
-        });
-
-        socket.on('chat message', (msg) => {
-            const item = document.createElement('li');
-            item.textContent = msg;
-            messages.appendChild(item);
-            window.scrollTo(0, document.body.scrollHeight);
-        });
+        function joinGame() {
+            var name=(JSON.parse(localStorage.getItem('user')).name)
+            
+            if (name) {
+                socket.emit('join', name); // Send name to server so it can be added to the current game/hand
+            } 
+        }
     </script>
 
 </body>
