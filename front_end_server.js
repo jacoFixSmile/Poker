@@ -24,7 +24,7 @@ app.use(express.json());
 // Route for the homepage
 app.get('/', (req, res) => {
     console.log("getting base URL")
-    if (game == null) {
+    if (game != undefined) {
         res.sendFile(__dirname + '/Public/index2.html');
     } else {
         res.sendFile(__dirname + '/Public/lobby.html');

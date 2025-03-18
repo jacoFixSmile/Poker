@@ -7,13 +7,18 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Lobby poker</title>
     <link rel="stylesheet" href="./style.css">
-    <link rel="icon" href="./favicon.ico" type="image/x-icon">
     <script src="/socket.io/socket.io.js"></script>
 </head>
 
 <body>
     <main>
         <h1 id="welcome_sign">Welcome </h1>
+        <form id="nameForm">
+            <label for="username">Enter your name:</label>
+            <input type="text" id="username" required>
+            <h4 class="error-text" style="display: none;" id="errMakeUser">error</h4>
+            <button type="button" onclick="addPlayer()">Submit</button>
+        </form>
         <h3>Waiting until the admin starts the game</h3>
     </main>
 
@@ -21,10 +26,11 @@
     <ul id="playersList"></ul>
 
     <script>
- 
+
 
         var counter = 0
         window.onload = () => {
+            getCurrentPlayer();
             fetchPlayers();
 
 
@@ -44,10 +50,55 @@
                 list.appendChild(li);
             });
         }
+        async function getCurrentPlayer() {
+            let user = localStorage.getItem("user");
+            const nameForm = document.getElementById("nameForm");
+            const usernameInput = document.getElementById("username");
 
+            if (user && user !== "undefined") {
+                console.log("Existing user:", JSON.parse(user));
+                nameForm.style.display = "none";
+                document.getElementById('welcome_sign').innerHTML = ('Welcome ' + (JSON.parse(localStorage.getItem('user')).name))
+            } else {
+                nameForm.style.display = "block";
+            }
+
+        }
+        async function addPlayer() {
+            var name=document.getElementById('username').value
+            if (!name) return; // User canceled prompt
+
+            const response = await fetch('/players', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name })
+            });
+            const newUser = await response.json();
+
+            if (response.ok) {
+                localStorage.setItem("user", JSON.stringify(newUser[0]));
+                console.log("New user created:", newUser);
+                document.getElementById('errMakeUser').style.display = "none"
+
+            } else {
+                console.error("Failed to create player");
+                console.log(newUser)
+                document.getElementById('errMakeUser').style.display = "block"
+                document.getElementById('errMakeUser').innerHTML = "Error: "+newUser.error
+
+
+
+
+            }
+            getCurrentPlayer();
+            fetchPlayers();
+
+
+            // socket.emit('login', name);
+        }
         const socket = io();
 
-        
+
 
         socket.on('lobby', (msg) => {
             console.log('refresh page')
