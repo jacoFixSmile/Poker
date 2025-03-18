@@ -14,25 +14,13 @@
 <body>
     <main>
         <h1 id="welcome_sign">Welcome </h1>
-        <h3 id="balance">balance: 0 </h3>
         <div id="counter">clock</div>
-        <h2>Users</h2>
-        <ul id="user_list">
-            <li>Daan</li>
-        </ul>
-        <ul id="messages"></ul>
-        <form id="form" action="javascript:void(0);">
-            <input id="input" autocomplete="off" /><button>Send</button>
-        </form>
-        <img id="card_placeholder" src="/cards/normal/10_of_clubs.png" />
-    </main>
 
-    <h1>Poker Players</h1>
-    <button onclick="addPlayer()">Add Player</button>
-    <ul id="playersList"></ul>
 
     <h2>🟢 Online Players</h2>
-    <ul id="onlinePlayers"></ul>
+    <ul id="playersList"></ul>
+</main>
+
     <script>
         cards = [
             [
@@ -64,49 +52,20 @@
             ]
         ]
 
-        var counter = 0
         window.onload = () => {
             getCurrentPlayer();
             fetchPlayers();
 
 
         };
-        async function addPlayer() {
-            const name = prompt('Enter player name:');
 
-            if (!name) return;
-            return await fetch('/players', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },  // ✅ Important header!
-                body: JSON.stringify({ name }),                   // ✅ Send JSON payload
-            });
-            fetchPlayers();
-
-
-            // socket.emit('login', name);
-        }
         async function getCurrentPlayer() {
             let user = localStorage.getItem("user");
 
             if (user && user !== "undefined") {
                 console.log("Existing user:", JSON.parse(user));
             } else {
-                const name = prompt("Enter your name to create a player:");
-                if (!name) return; // User canceled prompt
-
-                const response = await fetch('/players', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name })
-                });
-
-                if (response.ok) {
-                    const newUser = await response.json();
-                    localStorage.setItem("user", JSON.stringify(newUser[0]));
-                    console.log("New user created:", newUser);
-                } else {
-                    console.error("Failed to create player");
-                }
+                // no user but on home page ERROR
             }
             document.getElementById('welcome_sign').innerHTML = ('Welcome ' + (JSON.parse(localStorage.getItem('user')).name))
             document.getElementById('balance').innerHTML = ('Balance $' + (JSON.parse(localStorage.getItem('user')).chips))
