@@ -5,6 +5,7 @@ As part of this excerise we try to minimize the amount of package/frameworks we 
 * axios: for API access between back and front-end
 * express: to render the front-end pages
 * socket: to make the game interactive. Tutorial https://socket.io/docs/v4/tutorial/step-3
+SQLITE https://nodejs.org/api/sqlite.html https://blog.logrocket.com/using-built-in-sqlite-module-node-js/
 ## Installing
 Setting up termux on phone
 1. Install termux from git or playstore
@@ -35,6 +36,8 @@ Setting up termux on phone
         - [ ] central table: one phone is set in the middel of the table and all the players can look at there cards
         - [ ] All playing. The table is displayed on everyones phoen
     - [ ] Check if there is a current file for users and save/load games based on csv in the folder.
+- [ ] Cleanup
+    - Make user first on a waiting lobby until the admin starts the game. Then user can select/create a user and the game starts
 - [ ] Check if it can run on Turmux  
 - [ ] Code cleanup: 
     - [ ] Create a class for every object: Game, Set, Match, card, player, ... 

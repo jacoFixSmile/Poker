@@ -2,17 +2,19 @@ const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const { Server } = require('socket.io');
-const  { Player, Game,Set } = require('./game'); 
+const { Player, Game, Set } = require('./game');
 const { createServer } = require('node:http');
-
+const { DatabaseSync } = require('node:sqlite');
 const app = express();
 const port = 3000;
 const csvFilePath = path.join(__dirname, 'public', 'users.csv');
 //socket
 const server = createServer(app);
 const io = new Server(server);
+// database 
+const database = new DatabaseSync('public/poker.db');
 
-// settings 
+// settings game 
 var game;
 
 
@@ -21,12 +23,21 @@ app.use(express.json());
 
 // Route for the homepage
 app.get('/', (req, res) => {
-    res.sendFile(__dirname + '/index.html');
+    console.log("getting base URL")
+    if (game != undefined) {
+        res.sendFile(__dirname + '/Public/index2.html');
+    } else {
+        res.sendFile(__dirname + '/Public/lobby.html');
+
+    }
 });
 app.get('/admin', (req, res) => {
+    console.log("admin")
     res.sendFile(__dirname + '/Public/admin.html');
 });
-
+app.get('/lobby', (req, res) => {
+    res.sendFile(__dirname + '/Public/lobby.html');
+});
 // Function to parse CSV data
 function parseCSV(csvText) {
     const lines = csvText.trim().split('\n');
@@ -42,83 +53,87 @@ function parseCSV(csvText) {
 
 // API route to get all players
 app.get('/players', (req, res) => {
-    fs.readFile(csvFilePath, 'utf8', (err, data) => {
-        if (err) {
-            console.error('Error reading file:', err);
-            return res.status(500).json({ error: 'Error reading file' });
-        }
-        const parsedData = parseCSV(data);
-        res.json(parsedData);
-    });
+    const query = database.prepare('SELECT * FROM users');
+    res.json(query.all())
+
 });
 app.get('/start_game', (req, res) => {
-    
-    demo_game = new Game('demo_game')
+    console.log("trying to contact lobby")
+    io.emit('lobby', 'trying to contact lobby');
+    game = new Game('demo_game')
 
 });
 // API: Add a new player
 app.post('/players', async (req, res) => {
     const { name } = req.body;
     if (!name) return res.status(400).json({ error: 'Name is required' });
+    // protection against sql insert needed
+    const query = database.prepare(`SELECT * FROM users where name like '${name}'`);
+    if (query.all().length == 0) {
+        const insert = database.prepare('INSERT INTO users (name) VALUES (?)');
+        insert.run(name);
+        const result = database.prepare(`SELECT * FROM users where name like '${name}'`);
+        res.status(201).json(result.all());
+    } else {
 
-    fs.readFile(csvFilePath, 'utf8', (err, data) => {
-        if (err) {
-            console.error('Error reading file:', err);
-            return res.status(500).json({ error: 'Error reading file' });
+        return res.status(500).json({ error: 'Name is already in use' })
+    }
+
+});
+app.delete('/players/:id', async (req, res) => {
+    const { id } = req.params; // Get ID from URL
+
+    if (!id) return res.status(400).json({ error: 'Player ID is required' });
+
+    try {
+        const query = database.prepare('DELETE FROM users WHERE id = ?');
+        const result = query.run(id);
+
+        if (result.changes === 0) {
+            return res.status(404).json({ error: 'Player not found' });
         }
 
-        const players = parseCSV(data);
-
-        // Check if the player already exists
-        const existingPlayer = players.find(player => player.name.toLowerCase() === name.toLowerCase());
-        if (existingPlayer) {
-            return res.status(409).json({ error: 'Player with this name already exists' });
-        }
-
-        // Get the next available ID
-        const nextId = players.length > 0 ? Math.max(...players.map(p => parseInt(p.id))) + 1 : 1;
-        const newRow = [nextId, name, 1000];
-        const csvRow = `\n${newRow.join(',')}`;
-
-        // Append new player to the CSV file
-        fs.appendFile(csvFilePath, csvRow, (err) => {
-            if (err) {
-                console.error('Error appending to file:', err);
-                return res.status(500).json({ error: 'Error adding player' });
-            }
-
-            res.status(201).json({ id: nextId, name, chips: 1000 });
-            console.log(`Player ${name} added with ID ${nextId}`);
-        });
-    });
+        res.json({ message: `Player with ID ${id} deleted successfully.` });
+    } catch (error) {
+        console.error('Error deleting player:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
 });
 
 function ensureCSVExists() {
-  if (!fs.existsSync(csvFilePath)) {
-      console.log('CSV file not found. Creating a new one...');
-      const headers = 'id,name,chips';
-      fs.writeFileSync(csvFilePath, headers, 'utf8');
-  } else {
-  }
+    if (!fs.existsSync(csvFilePath)) {
+        console.log('CSV file not found. Creating a new one...');
+        const headers = 'id,name,chips';
+        fs.writeFileSync(csvFilePath, headers, 'utf8');
+    } else {
+    }
 }
-io.on('connection', (socket) => {
-    console.log('a user connected');
-    socket.on('disconnect', () => {
-      console.log('user disconnected');
-    });
-  });
-// game logic with socket
 
+// Store connected users
+let users = {};
 io.on('connection', (socket) => {
-    socket.on('chat message', (msg) => {
-      io.emit('chat message', msg);
+    console.log('A user connected:', socket.id);
+
+    // Listen for user joining
+    socket.on('join', (name) => {
+        users[socket.id] = name;
+        console.log(`${name} connected.`);
+        io.emit('updateUsers', Object.values(users)); // Send updated user list
     });
-  });
+
+    // Handle disconnects
+    socket.on('disconnect', () => {
+        const name = users[socket.id];
+        delete      [socket.id]; // Remove from list
+        console.log(`${name} disconnected.`);
+        io.emit('updateUsers', Object.values(users)); // Update user list
+    });
+});
 
 server.listen(3000, () => {
     ensureCSVExists()
 
-  console.log('Server running on http://localhost:3000');
+    console.log('Server running on http://localhost:3000');
 });
 
 

@@ -7,32 +7,20 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Poker host</title>
     <link rel="stylesheet" href="./style.css">
-    <link rel="icon" href="./favicon.ico" type="image/x-icon">
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
     <script src="/socket.io/socket.io.js"></script>
 </head>
 
 <body>
     <main>
         <h1 id="welcome_sign">Welcome </h1>
-        <h3 id="balance">balance: 0 </h3>
         <div id="counter">clock</div>
-        <h2>Users</h2>
-        <ul id="user_list">
-            <li>Daan</li>
-        </ul>
-        <ul id="messages"></ul>
-        <form id="form" action="javascript:void(0);">
-            <input id="input" autocomplete="off" /><button>Send</button>
-        </form>
-        <img id="card_placeholder" src="/cards/normal/10_of_clubs.png" />
-    </main>
 
-    <h1>Poker Players</h1>
-    <button onclick="addPlayer()">Add Player</button>
-    <ul id="playersList"></ul>
 
     <h2>🟢 Online Players</h2>
-    <ul id="onlinePlayers"></ul>
+    <ul id="playersList"></ul>
+</main>
+
     <script>
         cards = [
             [
@@ -64,52 +52,24 @@
             ]
         ]
 
-        var counter = 0
         window.onload = () => {
             getCurrentPlayer();
             fetchPlayers();
 
 
         };
-        async function addPlayer() {
-            const name = prompt('Enter player name:');
 
-            if (!name) return;
-            return await fetch('/players', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },  // ✅ Important header!
-                body: JSON.stringify({ name }),                   // ✅ Send JSON payload
-            });
-            fetchPlayers();
-
-
-            // socket.emit('login', name);
-        }
         async function getCurrentPlayer() {
             let user = localStorage.getItem("user");
 
             if (user && user !== "undefined") {
                 console.log("Existing user:", JSON.parse(user));
             } else {
-                const name = prompt("Enter your name to create a player:");
-                if (!name) return; // User canceled prompt
-
-                const response = await fetch('/players', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name })
-                });
-
-                if (response.ok) {
-                    const newUser = await response.json();
-                    localStorage.setItem("user", JSON.stringify(newUser));
-                    console.log("New user created:", newUser);
-                } else {
-                    console.error("Failed to create player");
-                }
+                // no user but on home page ERROR
             }
             document.getElementById('welcome_sign').innerHTML = ('Welcome ' + (JSON.parse(localStorage.getItem('user')).name))
             document.getElementById('balance').innerHTML = ('Balance $' + (JSON.parse(localStorage.getItem('user')).chips))
+            joinGame()
 
         }
 
@@ -118,7 +78,6 @@
             console.log('fetchPlayers')
             const response = await fetch('/players');
             const players = await response.json();
-            console.log(players)
             const list = document.getElementById('playersList');
             list.innerHTML = '';
             players.forEach(player => {
@@ -130,25 +89,13 @@
 
         const socket = io();
 
-        const form = document.getElementById('form');
-        const input = document.getElementById('input');
-        const messages = document.getElementById('messages');
-
-
-        form.addEventListener('submit', (e) => {
-            e.preventDefault();
-            if (input.value) {
-                socket.emit('chat message', input.value);
-                input.value = '';
-            }
-        });
-
-        socket.on('chat message', (msg) => {
-            const item = document.createElement('li');
-            item.textContent = msg;
-            messages.appendChild(item);
-            window.scrollTo(0, document.body.scrollHeight);
-        });
+        function joinGame() {
+            var name=(JSON.parse(localStorage.getItem('user')).name)
+            
+            if (name) {
+                socket.emit('join', name); // Send name to server so it can be added to the current game/hand
+            } 
+        }
     </script>
 
 </body>
