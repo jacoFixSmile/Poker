@@ -1,7 +1,9 @@
 CREATE TABLE users (
-    id INTEGER PRIMARY KEY, 
+    id INTEGER PRIMARY KEY,
+    is_online  INTEGER DEFAULT 0,
     name TEXT
 );
+
 
 CREATE TABLE games (
     id INTEGER PRIMARY KEY, 

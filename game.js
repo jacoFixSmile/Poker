@@ -1,3 +1,5 @@
+const { DatabaseSync } = require('node:sqlite');
+const database = new DatabaseSync('public/poker.db');
 function getRandomInt(max) {
     return Math.floor(Math.random() * max);
 }
@@ -11,24 +13,54 @@ class Game {
         this.sets = []
         // set game settings, game mode, small bigg, start coins
     }
-    addPlayer(player) {
-        // check number of players isn't larger than 10
-        this.players.push(player)
+
+    async saveGame() {
+        return new Promise((resolve, reject) => {
+            db.run(`INSERT INTO games (name) VALUES (?)`, [this.name], function (err) {
+                if (err) return reject(err);
+                console.log("Game created with ID:", this.lastID);
+                resolve(this.lastID);
+            });
+        });
+    }
+    async addPlayer(userId, chips) {
+        return new Promise((resolve, reject) => {
+            db.run(
+                `INSERT INTO user_games (user_id, game_id, chips) VALUES (?, ?, ?)`,
+                [userId, this.id, chips],
+                function (err) {
+                    if (err) return reject(err);
+                    resolve();
+                }
+            );
+        });
     }
     removePlayer(name) {
         //
     }
-    playSet() {
-        // check all players have 
-        console.log('starting set with:')
-        console.log(this.players)
-        this.sets.push(new Set(this.players))
+    playHand() {
+        console.log('Starting a set...');
+        // Pick 5 random cards
+        const cards = Array.from({ length: 5 }, () => Math.floor(Math.random() * 52) + 1);
+
+        return new Promise((resolve, reject) => {
+            db.run(`INSERT INTO hands (game_id, pot, card_1, card_2, card_3, card_4, card_5) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?)`,
+                [this.id, 0, ...cards],
+                function (err) {
+                    if (err) return reject(err);
+                    console.log("Hand created with ID:", this.lastID);
+                    resolve(this.lastID);
+                }
+            );
+        });
     }
-    getLastSet(){
-        return this.sets[this.sets.length-1]
-    }
+
+getLastSet(){
+    return this.sets[this.sets.length - 1]
 }
-class Set {
+}
+class Hand {
     constructor(players) { //players
         this.players = players
         this.deck = [
@@ -59,7 +91,7 @@ class Set {
         ]
         this.usedCards = []
         this.table = []
-        this.hands = []
+        this.PlayerHands = []
         this.startSet()
     }
 
@@ -96,77 +128,77 @@ class Set {
         }
         return this.table
     }
-    makeHand() {
+    makePlayerHand() {
         var hand = [this.pickCard(), this.pickCard()]
         return hand
 
     }
-    startSet(){
+    startHand() {
         this.makeTable()
         console.log(this.table)
         // give player hands
-        for(var i=0; i< this.players.length;i++){
-            this.players[i]['hand']=this.makeHand()
+        for (var i = 0; i < this.players.length; i++) {
+            this.players[i]['hand'] = this.makePlayerHand()
             console.log(this.players[i])
         }
         console.log(this.board)
     }
     sortCards(cards) {
-            return cards.sort((a, b) => a.rank - b.rank);
+        return cards.sort((a, b) => a.rank - b.rank);
     }
-    foldPlayer(id){
-        this.players = this.players.filter(player => player.id !== id);    
+    foldPlayer(id) {
+        this.players = this.players.filter(player => player.id !== id);
     }
     // fold functie (gebruiker verwijderen uit deze player lijst en hands)
     // functie om te raizen
-    calculateWinner(){
-        for(var i=0; i< this.players.length;i++){
-            var hand=this.players[i]['hand']
+    calculateWinner() {
+        for (var i = 0; i < this.players.length; i++) {
+            var hand = this.players[i]['hand']
             var possible = this.table.concat(hand)
-            console.log(this.evaluateHand(possible))
-          
+            console.log(this.evaluatePlayerHand(possible))
+
         }
     }
-    evaluateHand(hand) {
+    evaluatePlayerHand(hand) {
         hand.sort((a, b) => a.rank - b.rank);  // Sort by rank
-    
+
         const ranks = hand.map(card => card.rank);
         const suits = hand.map(card => card.suit);
         const rankCounts = {};  // Count occurrences of each rank
-    
+
         // Count how many times each rank appears
         ranks.forEach(rank => rankCounts[rank] = (rankCounts[rank] || 0) + 1);
-        
+
         const counts = Object.values(rankCounts).sort((a, b) => b - a); // Get counts sorted descending
         const uniqueRanks = Object.keys(rankCounts).map(Number).sort((a, b) => a - b);
-    
+
         const isFlush = new Set(suits).size === 1;  // If all suits are the same
         const isStraight = uniqueRanks.length === 5 && (uniqueRanks[4] - uniqueRanks[0] === 4 || (uniqueRanks.includes(14) && uniqueRanks.slice(0, 4).join(',') === "2,3,4,5")); // Handles Ace-low straight
-    
+
         let highestPair = null;
         let highestTriple = null;
         let highestStraight = isStraight ? uniqueRanks[uniqueRanks.length - 1] : null; // Highest card in straight
-    
+
         // Find the highest pair or triple
         for (let rank in rankCounts) {
             if (rankCounts[rank] === 2) highestPair = Math.max(highestPair || 0, Number(rank));
             if (rankCounts[rank] === 3) highestTriple = Math.max(highestTriple || 0, Number(rank));
         }
-    
+
         // Hand Rankings (Higher number = Stronger hand)
         if (isFlush && isStraight && ranks.includes(14)) return { rank: 1000, name: "Royal Flush" };
-        if (isFlush && isStraight) return { rank: (900+highestStraight), name: `Straight Flush (High card: ${highestStraight})` };
-        if (counts[0] === 4) return { rank: 800+uniqueRanks.find(rank => rankCounts[rank] === 4), name: `Four of a Kind (High card: ${uniqueRanks.find(rank => rankCounts[rank] === 4)})` };
-        if (counts[0] === 3 && counts[1] === 2) return { rank: 700+highestTriple*3+highestPair*2, name: `Full House (Trips: ${highestTriple}, Pair: ${highestPair})` };
+        if (isFlush && isStraight) return { rank: (900 + highestStraight), name: `Straight Flush (High card: ${highestStraight})` };
+        if (counts[0] === 4) return { rank: 800 + uniqueRanks.find(rank => rankCounts[rank] === 4), name: `Four of a Kind (High card: ${uniqueRanks.find(rank => rankCounts[rank] === 4)})` };
+        if (counts[0] === 3 && counts[1] === 2) return { rank: 700 + highestTriple * 3 + highestPair * 2, name: `Full House (Trips: ${highestTriple}, Pair: ${highestPair})` };
         if (isFlush) return { rank: 600, name: "Flush" };
-        if (isStraight) return { rank: 500+highestStraight, name: `Straight (High card: ${highestStraight})` };
-        if (counts[0] === 3) return { rank: 400+highestTriple, name: `Three of a Kind (High card: ${highestTriple})` };
-        if (counts[0] === 2 && counts[1] === 2) return { rank: 300+highestPair, name: `Two Pair (Highest Pair: ${highestPair})` };
-        if (counts[0] === 2) return { rank: 200+highestPair, name: `One Pair (High card: ${highestPair})` };
-        
+        if (isStraight) return { rank: 500 + highestStraight, name: `Straight (High card: ${highestStraight})` };
+        if (counts[0] === 3) return { rank: 400 + highestTriple, name: `Three of a Kind (High card: ${highestTriple})` };
+        if (counts[0] === 2 && counts[1] === 2) return { rank: 300 + highestPair, name: `Two Pair (Highest Pair: ${highestPair})` };
+        if (counts[0] === 2) return { rank: 200 + highestPair, name: `One Pair (High card: ${highestPair})` };
+
         return { rank: 1, name: `High Card (${ranks[ranks.length - 1]})` };
     }
-    
+
 
 }
 class Player {
@@ -209,4 +241,4 @@ rl.question(`What's your name?`, name => {
 });
 */
 
-module.exports = { Player, Game,Set };
+module.exports = { Player, Game, Set };
