@@ -28,8 +28,14 @@ Setting up termux on phone
         - [X] Check the name isn't used
         - [X] Save player info to local storage
         - [X] Check if the browser all ready has a user, otherwhise ask to create one.
-        - [ ] 👑 Remove player for admin user
+        - [X] 👑 Remove player for admin user
 - [ ] play a match of poker
+    - [ ] Dispay cards
+    - [X] Show actions
+    - [ ] Raise
+    - [ ] Fold
+    - [ ] Check
+    - [ ] Show active player
     - [ ] 👑 reset game (save old csv if). How would you select a user when reloading a game?
 - [ ] 👑 Admin account
     - [ ] Game modes:
@@ -37,7 +43,7 @@ Setting up termux on phone
         - [ ] All playing. The table is displayed on everyones phoen
     - [ ] Check if there is a current file for users and save/load games based on csv in the folder.
 - [ ] Cleanup
-    - Make user first on a waiting lobby until the admin starts the game. Then user can select/create a user and the game starts
+    -  [X] Make user first on a waiting lobby until the admin starts the game. Then user can select/create a user and the game starts
 - [ ] Check if it can run on Turmux  
 - [ ] Code cleanup: 
     - [ ] Create a class for every object: Game, Set, Match, card, player, ... 

@@ -124,6 +124,7 @@ io.on('connection', (socket) => {
     // Handle disconnects
     socket.on('disconnect', () => {
         const name = users[socket.id];
+        console.log(users[socket.id])
         delete      [socket.id]; // Remove from list
         console.log(`${name} disconnected.`);
         io.emit('updateUsers', Object.values(users)); // Update user list
