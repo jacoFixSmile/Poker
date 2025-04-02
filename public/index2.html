@@ -102,10 +102,10 @@
         const socket = io();
 
         function joinGame() {
-            var name=(JSON.parse(localStorage.getItem('user')).name)
+            var user=(JSON.parse(localStorage.getItem('user')))
             
-            if (name) {
-                socket.emit('join', name); // Send name to server so it can be added to the current game/hand
+            if (user) {
+                socket.emit('join', user); // Send name to server so it can be added to the current game/hand
             } 
         }
     </script>

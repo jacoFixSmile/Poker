@@ -62,6 +62,7 @@ app.get('/start_game', (req, res) => {
     io.emit('lobby', 'trying to contact lobby');
     game = new Game('demo_game')
 
+
 });
 // API: Add a new player
 app.post('/players', async (req, res) => {
@@ -113,20 +114,25 @@ function ensureCSVExists() {
 let users = {};
 io.on('connection', (socket) => {
     console.log('A user connected:', socket.id);
-
     // Listen for user joining
-    socket.on('join', (name) => {
-        users[socket.id] = name;
-        console.log(`${name} connected.`);
+    socket.on('join', (user) => {
+        users[socket.id] = user.id;
+        console.log(`${user.name} connected.`);
+        const insert = database.prepare('UPDATE users SET is_online=1  WHERE id=(?)');
+        insert.run(user.id);
         io.emit('updateUsers', Object.values(users)); // Send updated user list
     });
 
     // Handle disconnects
     socket.on('disconnect', () => {
-        const name = users[socket.id];
+        const user = users[socket.id];
         console.log(users[socket.id])
         delete      [socket.id]; // Remove from list
-        console.log(`${name} disconnected.`);
+        console.log(`${user} disconnected.`);
+        if(user){
+            const insert = database.prepare('UPDATE users SET is_online=0  WHERE id=(?)');
+            insert.run(user);
+        }
         io.emit('updateUsers', Object.values(users)); // Update user list
     });
 });
