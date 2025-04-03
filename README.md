@@ -31,6 +31,7 @@ Setting up termux on phone
         - [X] 👑 Remove player for admin user
 - [ ] play a match of poker
     - [ ] Dispay cards
+    => Voorkeur zou hier gaan naar hand met combinatie via db en back end maar lijkt ingewikeld. Daarom mss logica niveau afbaken tot op de js klassen & sql enkel de gegevens weglegoggen omdat het altijd intresant is om later statiesteken op te trekken
     - [X] Show actions
     - [ ] Raise
     - [ ] Fold

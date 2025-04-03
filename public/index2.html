@@ -17,21 +17,20 @@
         <h3 id="balance">balance: 0 </h3>
         <div class="game">
             <div id="board">
-                
             </div>
-        <div id="control">
-            <button id="call">Call</button>
-            <button id="call_fold">Fold/call</button>
-            <button id="fold">Fold</button>
-            <input type="range" min="1" max="100" value="50" class="slider" id="raise">
+            <div id="control">
+                <button id="call">Call</button>
+                <button id="call_fold">Fold/call</button>
+                <button id="fold">Fold</button>
+                <input type="range" min="1" max="100" value="50" class="slider" id="raise">
+            </div>
         </div>
-        </div>
 
 
 
-    <h2>🟢 Online Players</h2>
-    <ul id="playersList"></ul>
-</main>
+        <h2>🟢 Online Players</h2>
+        <ul id="playersList"></ul>
+    </main>
 
     <script>
         cards = [
@@ -102,12 +101,24 @@
         const socket = io();
 
         function joinGame() {
-            var user=(JSON.parse(localStorage.getItem('user')))
-            
+            var user = (JSON.parse(localStorage.getItem('user')))
+
             if (user) {
                 socket.emit('join', user); // Send name to server so it can be added to the current game/hand
-            } 
+            }
         }
+        socket.on('updateGameBoard', (msg) => {
+            console.log(msg.table)
+
+            const board = document.getElementById('board');
+            board.innerHTML = '';
+            msg.table.forEach(item => {
+                console.log(item)
+                const card = document.createElement('img');
+                card.src = '.\\cards\\normal\\'+item.name;
+                board.appendChild(card);
+            });
+        });
     </script>
 
 </body>

@@ -61,7 +61,9 @@ app.get('/start_game', (req, res) => {
     console.log("trying to contact lobby")
     io.emit('lobby', 'trying to contact lobby');
     game = new Game('demo_game')
-
+    game.saveGame()
+    game.createHand()
+    io.emit('updateGameBoard', game.getLastHand());
 
 });
 // API: Add a new player
