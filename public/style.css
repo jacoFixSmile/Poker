@@ -76,3 +76,8 @@ BUTTON {
   position: absolute;
   z-index: 1;
 }
+
+.deck_card{
+  height: 40vh;
+  margin: 0.5%;
+}

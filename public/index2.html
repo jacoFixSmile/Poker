@@ -18,6 +18,9 @@
         <div class="game">
             <div id="board">
             </div>
+            <div id="hand">
+
+            </div>
             <div id="control">
                 <button id="call">Call</button>
                 <button id="call_fold">Fold/call</button>
@@ -66,10 +69,10 @@
         window.onload = () => {
             getCurrentPlayer();
             fetchPlayers();
-
+            getGameBoard()
 
         };
-
+        
         async function getCurrentPlayer() {
             let user = localStorage.getItem("user");
 
@@ -97,7 +100,23 @@
                 list.appendChild(li);
             });
         }
-
+        async function getGameBoard(){
+            const response = await fetch('/get_game_board');
+            const boardResponse = await response.json();
+            updateGameBoard(boardResponse)
+       
+        }
+        function updateGameBoard(boardResponse){
+            const board = document.getElementById('board');
+            board.innerHTML = '';
+            boardResponse.table.forEach(item => {
+                console.log(item)
+                const card = document.createElement('img');
+                card.src = '.\\cards\\normal\\'+item.name;
+                card.classList.add('deck_card')
+                board.appendChild(card);
+            }); 
+        }
         const socket = io();
 
         function joinGame() {
@@ -109,15 +128,8 @@
         }
         socket.on('updateGameBoard', (msg) => {
             console.log(msg.table)
-
-            const board = document.getElementById('board');
-            board.innerHTML = '';
-            msg.table.forEach(item => {
-                console.log(item)
-                const card = document.createElement('img');
-                card.src = '.\\cards\\normal\\'+item.name;
-                board.appendChild(card);
-            });
+            updateGameBoard(msg)
+   
         });
     </script>
 

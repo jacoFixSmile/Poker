@@ -66,6 +66,17 @@ app.get('/start_game', (req, res) => {
     io.emit('updateGameBoard', game.getLastHand());
 
 });
+app.get('/get_game_board' , (req, res) => {
+    console.log('game not found')
+
+    if (game == null) {
+        console.log('game not found')
+        return res.status('400').json({ error: 'No game exists' });
+    } else {
+        return res.status(201).json(game.getLastHand());
+
+    }
+});
 // API: Add a new player
 app.post('/players', async (req, res) => {
     const { name } = req.body;
@@ -129,9 +140,9 @@ io.on('connection', (socket) => {
     socket.on('disconnect', () => {
         const user = users[socket.id];
         console.log(users[socket.id])
-        delete      [socket.id]; // Remove from list
+        delete [socket.id]; // Remove from list
         console.log(`${user} disconnected.`);
-        if(user){
+        if (user) {
             const insert = database.prepare('UPDATE users SET is_online=0  WHERE id=(?)');
             insert.run(user);
         }
