@@ -38,6 +38,7 @@ Setting up termux on phone
     - [ ] Check
     - [ ] Show active player
     - [ ] 👑 reset game (save old csv if). How would you select a user when reloading a game?
+    - [ ] 👑 Add extra chips to a user  
 - [ ] 👑 Admin account
     - [ ] Game modes:
         - [ ] central table: one phone is set in the middel of the table and all the players can look at there cards

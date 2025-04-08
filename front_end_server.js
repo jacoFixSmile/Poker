@@ -20,7 +20,7 @@ var game;
 
 app.use(express.static('public'));
 app.use(express.json());
-
+//<=====================APP managengent=====================>
 // Route for the homepage
 app.get('/', (req, res) => {
     console.log("getting base URL")
@@ -38,31 +38,17 @@ app.get('/admin', (req, res) => {
 app.get('/lobby', (req, res) => {
     res.sendFile(__dirname + '/Public/lobby.html');
 });
-// Function to parse CSV data
-function parseCSV(csvText) {
-    const lines = csvText.trim().split('\n');
-    const headers = lines[0].split(',');
-    return lines.slice(1).map(line => {
-        const values = line.split(',');
-        return headers.reduce((obj, header, index) => {
-            obj[header.trim()] = values[index]?.trim();
-            return obj;
-        }, {});
-    });
-}
+//<=====================game managment=====================>
 
-// API route to get all players
-app.get('/players', (req, res) => {
-    const query = database.prepare('SELECT * FROM users');
-    res.json(query.all())
 
-});
 app.get('/start_game', (req, res) => {
     console.log("trying to contact lobby")
     io.emit('lobby', 'trying to contact lobby');
     game = new Game('demo_game')
     game.saveGame()
     game.createHand()
+    game.addPlayer(15)
+    console.log('user_game',game.players)
     io.emit('updateGameBoard', game.getLastHand());
 
 });
@@ -76,6 +62,13 @@ app.get('/get_game_board' , (req, res) => {
         return res.status(201).json(game.getLastHand());
 
     }
+});
+//<=====================player management=====================>
+// API route to get all players
+app.get('/players', (req, res) => {
+    const query = database.prepare('SELECT * FROM users');
+    res.json(query.all())
+
 });
 // API: Add a new player
 app.post('/players', async (req, res) => {
@@ -94,6 +87,7 @@ app.post('/players', async (req, res) => {
     }
 
 });
+
 app.delete('/players/:id', async (req, res) => {
     const { id } = req.params; // Get ID from URL
 
@@ -113,16 +107,12 @@ app.delete('/players/:id', async (req, res) => {
         res.status(500).json({ error: 'Internal server error' });
     }
 });
+//<=====================player game management=====================>
+app.post('/players/online', async (req, res) => {
+    console.log(game.getPlayers())
+   
 
-function ensureCSVExists() {
-    if (!fs.existsSync(csvFilePath)) {
-        console.log('CSV file not found. Creating a new one...');
-        const headers = 'id,name,chips';
-        fs.writeFileSync(csvFilePath, headers, 'utf8');
-    } else {
-    }
-}
-
+});
 // Store connected users
 let users = {};
 io.on('connection', (socket) => {
@@ -151,7 +141,6 @@ io.on('connection', (socket) => {
 });
 
 server.listen(3000, () => {
-    ensureCSVExists()
 
     console.log('Server running on http://localhost:3000');
 });

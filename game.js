@@ -14,7 +14,12 @@ class Game {
         this.hands = []
         // set game settings, game mode, small bigg, start coins
     }
+    getOnlineGamePlayers(){
 
+        const result = database.prepare(`SELECT ug.* FROM user_games ug inner join users u on u.id=ug.user_id and u.is_online =1`);
+        return result.all()
+
+    }
     async saveGame() {
         return new Promise((resolve, reject) => {
             const query = db.prepare(`INSERT INTO games (name) VALUES (?) RETURNING Id`)
@@ -24,30 +29,69 @@ class Game {
             resolve(run.lastInsertRowid)
         },);
     }
-    async addPlayer(userId, chips) {
-        return new Promise((resolve, reject) => {
-            db.run(
-                `INSERT INTO user_games (user_id, game_id, chips) VALUES (?, ?, ?)`,
-                [userId, this.id, chips],
-                function (err) {
-                    if (err) return reject(err);
-                    resolve();
-                }
-            );
-        });
+    async addPlayer(userId) {
+        var new_user=new UserGame(userId,this.id)
+        new_user.instantiateUserGame()
+        const playerExists = this.players.some(player => player.id === new_user.id);
+
+        if (!playerExists) {
+            this.players.push(new_user);
+        }
+    }
+    async loadAllGamePlayers(){
+        const current_users = db.prepare(`SELECT * FROM user_games where game_id = ${this.id}`);
+        this.players=[]
+        current_users.all().forEach((item) => {
+            this.players.push(new UserGame(item.user_id,item.game_id))
+          });
+        return this.players
+
     }
     removePlayer(name) {
         //
     }
     createHand() {
         console.log('Starting a set... for game:'+this.id);
-        var new_hand = new Hand(this.players,this.id)
+        var new_hand = new Hand(this.players,this.id) // kunnen players zijn die in game zitten & algemeen online staan zo kunnen we een lijstje bekomen
         this.hands.push(new_hand)
 
     }
 
     getLastHand() {
         return this.hands[this.hands.length - 1]
+    }
+}
+class UserGame{
+
+    constructor(userId,gameId){
+        this.id = null
+        this.userId=userId
+        this.gameId=gameId
+        this.chips= null
+
+
+    }
+    instantiateUserGame(){
+             // check user does not exists in 
+             const current_user = db.prepare(`SELECT * FROM user_games where user_id = '${this.userId}' AND  game_id = '${this.gameId}'`);
+             if (current_user.all().length==0){
+                const query = db.prepare(`INSERT INTO user_games (user_id, game_id, chips) VALUES (?,?, 1000)`)
+                var run = query.run(this.userId,this.gameId)
+                this.id = run.lastInsertRowid
+                this.chips=1000         
+            }else{
+                this.id=current_user.all()[0].Id
+                this.id=current_user.all()[0].chips
+
+             }
+    }
+    addChips(amount){
+        if(this.chips+amount>=0){
+            const query = db.prepare(`UPDATE user_games set (chips) VALUES (?) WHERE Id=(?)`)
+            var run = query.run(this.chips+amount,this.id)
+        }else{
+            throw new Error("Chip amount is negativ");
+        }
     }
 }
 class Hand {
@@ -100,9 +144,12 @@ class Hand {
                 }
             }
         } while (isUsedCard)
-        var card = { 'name': this.deck[suit][rank], 'suit': suit, "rank": rank }
+        var card = {'id':suit*100+rank, 'name': this.deck[suit][rank], 'suit': suit, "rank": rank }
         this.usedCards.push(card)
         return card
+    }
+    getCardFromDeck(name){
+        
     }
     printDeck() {
         for (var i = 0; i < this.deck.length; i++) {
@@ -118,14 +165,12 @@ class Hand {
             var card = this.pickCard()
             this.table.push(card)
         }
-        /*
         const query = db.prepare(`INSERT INTO hands (game_id, pot, card_1, card_2, card_3, card_4, card_5) 
                     VALUES (?, ?, ?, ?, ?, ?, ?)`)
         console.log(this.table[0])
-        var run = query.run(this.gameId, 0, this.table[0], this.table[1], this.table[2], this.table[3], this.table[4])
+        var run = query.run(this.gameId, 0, this.table[0].id, this.table[1].id, this.table[2].id, this.table[3].id, this.table[4].id)
         console.log(run)
         this.id = run.lastInsertRowid
-        */
 
     }
     makePlayerHand() {

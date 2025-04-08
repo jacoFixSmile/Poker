@@ -59,6 +59,8 @@
                 console.log("Existing user:", JSON.parse(user));
                 nameForm.style.display = "none";
                 document.getElementById('welcome_sign').innerHTML = ('Welcome ' + (JSON.parse(localStorage.getItem('user')).name))
+                joinGame()
+                
             } else {
                 nameForm.style.display = "block";
             }
@@ -98,6 +100,13 @@
         }
         const socket = io();
 
+        function joinGame() {
+            var user = (JSON.parse(localStorage.getItem('user')))
+
+            if (user) {
+                socket.emit('join', user); // Send name to server so it can be added to the current game/hand
+            }
+        }
 
 
         socket.on('lobby', (msg) => {
