@@ -16,11 +16,12 @@ const database = new DatabaseSync('public/poker.db');
 
 // settings game 
 var game;
+let users = {};
 
 
 app.use(express.static('public'));
 app.use(express.json());
-
+//<=====================APP managengent=====================>
 // Route for the homepage
 app.get('/', (req, res) => {
     console.log("getting base URL")
@@ -38,29 +39,39 @@ app.get('/admin', (req, res) => {
 app.get('/lobby', (req, res) => {
     res.sendFile(__dirname + '/Public/lobby.html');
 });
-// Function to parse CSV data
-function parseCSV(csvText) {
-    const lines = csvText.trim().split('\n');
-    const headers = lines[0].split(',');
-    return lines.slice(1).map(line => {
-        const values = line.split(',');
-        return headers.reduce((obj, header, index) => {
-            obj[header.trim()] = values[index]?.trim();
-            return obj;
-        }, {});
-    });
-}
+//<=====================game managment=====================>
 
-// API route to get all players
-app.get('/players', (req, res) => {
-    const query = database.prepare('SELECT * FROM users');
-    res.json(query.all())
 
-});
 app.get('/start_game', (req, res) => {
     console.log("trying to contact lobby")
     io.emit('lobby', 'trying to contact lobby');
     game = new Game('demo_game')
+    game.saveGame()
+    console.log('all users')
+    for (const [key, value] of Object.entries(users)) {
+        game.addPlayer(value);
+      }
+    game.createHand()
+    console.log('user_game',game.players)
+    io.emit('updateGameBoard', game.getLastHand());
+
+});
+app.get('/get_game_board' , (req, res) => {
+    console.log('game not found')
+
+    if (game == null) {
+        console.log('game not found')
+        return res.status(400).json({ error: 'No game exists' });
+    } else {
+        return res.status(201).json(game.getLastHand());
+
+    }
+});
+//<=====================player management=====================>
+// API route to get all players
+app.get('/players', (req, res) => {
+    const query = database.prepare('SELECT * FROM users');
+    res.json(query.all())
 
 });
 // API: Add a new player
@@ -80,6 +91,7 @@ app.post('/players', async (req, res) => {
     }
 
 });
+
 app.delete('/players/:id', async (req, res) => {
     const { id } = req.params; // Get ID from URL
 
@@ -99,40 +111,43 @@ app.delete('/players/:id', async (req, res) => {
         res.status(500).json({ error: 'Internal server error' });
     }
 });
+//<=====================player game management=====================>
+app.post('/players/online', async (req, res) => {
+    console.log(game.getPlayers())
+   
 
-function ensureCSVExists() {
-    if (!fs.existsSync(csvFilePath)) {
-        console.log('CSV file not found. Creating a new one...');
-        const headers = 'id,name,chips';
-        fs.writeFileSync(csvFilePath, headers, 'utf8');
-    } else {
-    }
-}
-
+});
 // Store connected users
-let users = {};
 io.on('connection', (socket) => {
     console.log('A user connected:', socket.id);
-
     // Listen for user joining
-    socket.on('join', (name) => {
-        users[socket.id] = name;
-        console.log(`${name} connected.`);
+    socket.on('join', (user) => {
+        users[socket.id] = user.id;
+        console.log(`${user.name} connected.`);
+        const insert = database.prepare('UPDATE users SET is_online=1  WHERE id=(?)');
+        insert.run(user.id);
+        if(game){
+            console.log('adding player'+user.id)
+            game.addPlayer(user.id);
+        }
         io.emit('updateUsers', Object.values(users)); // Send updated user list
     });
 
     // Handle disconnects
     socket.on('disconnect', () => {
-        const name = users[socket.id];
+        const user = users[socket.id];
         console.log(users[socket.id])
-        delete      [socket.id]; // Remove from list
-        console.log(`${name} disconnected.`);
+        delete [socket.id]; // Remove from list
+        console.log(`${user} disconnected.`);
+        if (user) {
+            const insert = database.prepare('UPDATE users SET is_online=0  WHERE id=(?)');
+            insert.run(user);
+        }
         io.emit('updateUsers', Object.values(users)); // Update user list
     });
 });
 
 server.listen(3000, () => {
-    ensureCSVExists()
 
     console.log('Server running on http://localhost:3000');
 });

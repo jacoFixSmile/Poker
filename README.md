@@ -31,12 +31,14 @@ Setting up termux on phone
         - [X] 👑 Remove player for admin user
 - [ ] play a match of poker
     - [ ] Dispay cards
+    => Voorkeur zou hier gaan naar hand met combinatie via db en back end maar lijkt ingewikeld. Daarom mss logica niveau afbaken tot op de js klassen & sql enkel de gegevens weglegoggen omdat het altijd intresant is om later statiesteken op te trekken
     - [X] Show actions
     - [ ] Raise
     - [ ] Fold
     - [ ] Check
     - [ ] Show active player
     - [ ] 👑 reset game (save old csv if). How would you select a user when reloading a game?
+    - [ ] 👑 Add extra chips to a user  
 - [ ] 👑 Admin account
     - [ ] Game modes:
         - [ ] central table: one phone is set in the middel of the table and all the players can look at there cards
@@ -49,7 +51,8 @@ Setting up termux on phone
     - [ ] Create a class for every object: Game, Set, Match, card, player, ... 
     - [ ] Remove logging
 
-
+## Usefull
+* https://opengameart.org/content/colorful-poker-card-back
 > [!NOTE]
 > Useful information that users should know, even when skimming content.
  * "rm -rf FolderName" can be used in termux to remove everything from a folder

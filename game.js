@@ -1,5 +1,5 @@
 const { DatabaseSync } = require('node:sqlite');
-const database = new DatabaseSync('public/poker.db');
+const db = new DatabaseSync('public/poker.db');
 function getRandomInt(max) {
     return Math.floor(Math.random() * max);
 }
@@ -7,62 +7,101 @@ function getRandomInt(max) {
 
 class Game {
     constructor(name) {
-        console.log("====game launced====")
+        console.log("====game laun  ced====")
+        this.id = null
         this.name = name
         this.players = []
-        this.sets = []
+        this.hands = []
         // set game settings, game mode, small bigg, start coins
     }
+    getOnlineGamePlayers(){
 
+        const result = database.prepare(`SELECT ug.* FROM user_games ug inner join users u on u.id=ug.user_id and u.is_online =1`);
+        return result.all()
+
+    }
     async saveGame() {
         return new Promise((resolve, reject) => {
-            db.run(`INSERT INTO games (name) VALUES (?)`, [this.name], function (err) {
-                if (err) return reject(err);
-                console.log("Game created with ID:", this.lastID);
-                resolve(this.lastID);
-            });
-        });
+            const query = db.prepare(`INSERT INTO games (name) VALUES (?) RETURNING Id`)
+            var run = query.run('testing')
+            console.log(run)
+            this.id = (run.lastInsertRowid)
+            resolve(run.lastInsertRowid)
+        },);
     }
-    async addPlayer(userId, chips) {
-        return new Promise((resolve, reject) => {
-            db.run(
-                `INSERT INTO user_games (user_id, game_id, chips) VALUES (?, ?, ?)`,
-                [userId, this.id, chips],
-                function (err) {
-                    if (err) return reject(err);
-                    resolve();
-                }
-            );
-        });
+    async addPlayer(userId) {
+        var new_user=new UserGame(userId,this.id)
+        new_user.instantiateUserGame()
+        const playerExists = this.players.some(player => player.id === new_user.id);
+
+        if (!playerExists) {
+            this.players.push(new_user);
+        }
+    }
+    async loadAllGamePlayers(){
+        const current_users = db.prepare(`SELECT * FROM user_games where game_id = ${this.id}`);
+        this.players=[]
+        current_users.all().forEach((item) => {
+            this.players.push(new UserGame(item.user_id,item.game_id))
+          });
+        return this.players
+
     }
     removePlayer(name) {
         //
     }
-    playHand() {
-        console.log('Starting a set...');
-        // Pick 5 random cards
-        const cards = Array.from({ length: 5 }, () => Math.floor(Math.random() * 52) + 1);
+    createHand() {
+        console.log('Starting a set... for game:'+this.id);
+        const current_users = db.prepare(`SELECT ug.* FROM user_games ug inner join users u on u.id=ug.user_id and u.is_online =1 and game_id= ${this.id}`);
+        var new_hand = new Hand(current_users.all(),this.id) // kunnen players zijn die in game zitten & algemeen online staan zo kunnen we een lijstje bekomen
+        this.hands.push(new_hand)
 
-        return new Promise((resolve, reject) => {
-            db.run(`INSERT INTO hands (game_id, pot, card_1, card_2, card_3, card_4, card_5) 
-                    VALUES (?, ?, ?, ?, ?, ?, ?)`,
-                [this.id, 0, ...cards],
-                function (err) {
-                    if (err) return reject(err);
-                    console.log("Hand created with ID:", this.lastID);
-                    resolve(this.lastID);
-                }
-            );
-        });
     }
 
-getLastSet(){
-    return this.sets[this.sets.length - 1]
+    getLastHand() {
+        return this.hands[this.hands.length - 1]
+    }
 }
+class UserGame{
+
+    constructor(userId,gameId){
+        this.id = null
+        this.userId=userId
+        this.gameId=gameId
+        this.chips= null
+
+
+    }
+    instantiateUserGame(){
+             // check user does not exists in 
+             const current_user = db.prepare(`SELECT * FROM user_games where user_id = '${this.userId}' AND  game_id = '${this.gameId}'`);
+             if (current_user.all().length==0){
+                const query = db.prepare(`INSERT INTO user_games (user_id, game_id, chips) VALUES (?,?, 1000)`)
+                var run = query.run(this.userId,this.gameId)
+                this.id = run.lastInsertRowid
+                this.chips=1000         
+            }else{
+                this.id=current_user.all()[0].Id
+                this.id=current_user.all()[0].chips
+
+             }
+    }
+    addChips(amount){
+        if(this.chips+amount>=0){
+            const query = db.prepare(`UPDATE user_games set (chips) VALUES (?) WHERE Id=(?)`)
+            var run = query.run(this.chips+amount,this.id)
+        }else{
+            throw new Error("Chip amount is negativ");
+        }
+    }
 }
 class Hand {
-    constructor(players) { //players
+    constructor(players, gameId) { //players
+        this.id = null
         this.players = players
+        this.gameId = gameId
+        this.activeUser=null
+        this.round=1
         this.deck = [
             [
                 "ace_of_clubs.png", "2_of_clubs.png", "3_of_clubs.png", "4_of_clubs.png", "5_of_clubs.png",
@@ -92,7 +131,7 @@ class Hand {
         this.usedCards = []
         this.table = []
         this.PlayerHands = []
-        this.startSet()
+        this.startHand()
     }
 
     pickCard() {
@@ -108,9 +147,12 @@ class Hand {
                 }
             }
         } while (isUsedCard)
-        var card = { 'name': this.deck[suit][rank], 'suit': suit, "rank": rank }
+        var card = {'id':suit*100+rank, 'name': this.deck[suit][rank], 'suit': suit, "rank": rank }
         this.usedCards.push(card)
         return card
+    }
+    getCardFromDeck(name){
+        
     }
     printDeck() {
         for (var i = 0; i < this.deck.length; i++) {
@@ -126,7 +168,13 @@ class Hand {
             var card = this.pickCard()
             this.table.push(card)
         }
-        return this.table
+        const query = db.prepare(`INSERT INTO hands (game_id, pot, card_1, card_2, card_3, card_4, card_5) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?)`)
+        console.log(this.table[0])
+        var run = query.run(this.gameId, 0, this.table[0].id, this.table[1].id, this.table[2].id, this.table[3].id, this.table[4].id)
+        console.log(run)
+        this.id = run.lastInsertRowid
+
     }
     makePlayerHand() {
         var hand = [this.pickCard(), this.pickCard()]
@@ -172,7 +220,7 @@ class Hand {
         const counts = Object.values(rankCounts).sort((a, b) => b - a); // Get counts sorted descending
         const uniqueRanks = Object.keys(rankCounts).map(Number).sort((a, b) => a - b);
 
-        const isFlush = new Set(suits).size === 1;  // If all suits are the same
+        const isFlush = new Hand(suits).size === 1;  // If all suits are the same
         const isStraight = uniqueRanks.length === 5 && (uniqueRanks[4] - uniqueRanks[0] === 4 || (uniqueRanks.includes(14) && uniqueRanks.slice(0, 4).join(',') === "2,3,4,5")); // Handles Ace-low straight
 
         let highestPair = null;
@@ -241,4 +289,4 @@ rl.question(`What's your name?`, name => {
 });
 */
 
-module.exports = { Player, Game, Set };
+module.exports = { Player, Game, Hand };

@@ -17,57 +17,30 @@
         <h3 id="balance">balance: 0 </h3>
         <div class="game">
             <div id="board">
-                
             </div>
-        <div id="control">
-            <button id="call">Call</button>
-            <button id="call_fold">Fold/call</button>
-            <button id="fold">Fold</button>
-            <input type="range" min="1" max="100" value="50" class="slider" id="raise">
+            <div id="hand">
+
+            </div>
+            <div id="control">
+                <button id="check_call">Check/Call</button>
+                <!-- <button id="call_fold">Fold/call</button> -->
+                <button id="fold">Fold</button>
+                <input type="range" min="1" max="100" value="50" class="slider" id="raise">
+            </div>
         </div>
-        </div>
 
 
 
-    <h2>🟢 Online Players</h2>
-    <ul id="playersList"></ul>
-</main>
+        <h2>🟢 Online Players</h2>
+        <ul id="playersList"></ul>
+    </main>
 
     <script>
-        cards = [
-            [
-                "ace_of_clubs.png", "2_of_clubs.png", "3_of_clubs.png", "4_of_clubs.png", "5_of_clubs.png",
-                "6_of_clubs.png", "7_of_clubs.png", "8_of_clubs.png", "9_of_clubs.png", "10_of_clubs.png",
-                "jack_of_clubs.png", "jack_of_clubs2.png", "queen_of_clubs.png", "queen_of_clubs2.png",
-                "king_of_clubs.png", "king_of_clubs2.png"
-            ],
-            [
-                "ace_of_diamonds.png", "2_of_diamonds.png", "3_of_diamonds.png", "4_of_diamonds.png", "5_of_diamonds.png",
-                "6_of_diamonds.png", "7_of_diamonds.png", "8_of_diamonds.png", "9_of_diamonds.png", "10_of_diamonds.png",
-                "jack_of_diamonds.png", "jack_of_diamonds2.png", "queen_of_diamonds.png", "queen_of_diamonds2.png",
-                "king_of_diamonds.png", "king_of_diamonds2.png"
-            ],
-            [
-                "ace_of_hearts.png", "2_of_hearts.png", "3_of_hearts.png", "4_of_hearts.png", "5_of_hearts.png",
-                "6_of_hearts.png", "7_of_hearts.png", "8_of_hearts.png", "9_of_hearts.png", "10_of_hearts.png",
-                "jack_of_hearts.png", "jack_of_hearts2.png", "queen_of_hearts.png", "queen_of_hearts2.png",
-                "king_of_hearts.png", "king_of_hearts2.png"
-            ],
-            [
-                "ace_of_spades.png", "ace_of_spades2.png", "2_of_spades.png", "3_of_spades.png", "4_of_spades.png",
-                "5_of_spades.png", "6_of_spades.png", "7_of_spades.png", "8_of_spades.png", "9_of_spades.png",
-                "10_of_spades.png", "jack_of_spades.png", "jack_of_spades2.png", "queen_of_spades.png", "queen_of_spades2.png",
-                "king_of_spades.png", "king_of_spades2.png"
-            ],
-            [
-                "black_joker.png", "red_joker.png"
-            ]
-        ]
 
         window.onload = () => {
             getCurrentPlayer();
             fetchPlayers();
-
+            getGameBoard()
 
         };
 
@@ -98,16 +71,63 @@
                 list.appendChild(li);
             });
         }
+        async function getGameBoard() {
+            const response = await fetch('/get_game_board');
+            const boardResponse = await response.json();
+            updateGameBoard(boardResponse)
 
+        }
+        function updateGameBoard(boardResponse) {
+            let user = JSON.parse(localStorage.getItem("user"));
+            const board = document.getElementById('board');
+            board.innerHTML = '';
+            for (var i = 0; i < boardResponse.table.length; i++) {
+                var item = boardResponse.table[i]
+                const card = document.createElement('img');
+                if (i < boardResponse.round) {
+                    card.src = '.\\cards\\normal\\' + item.name;
+                } else {
+                    card.src = '.\\cards\\normal\\card back orange.png'
+                }
+                card.classList.add('deck_card')
+                board.appendChild(card);
+            }
+            console.log(boardResponse.players)
+            boardResponse.players.forEach(player => {
+                if (player.user_id == user.id) {
+                    updatePlayerGameStats(player)
+                }
+            });
+
+
+        }
+        function updatePlayerGameStats(playerInfo) {
+            console.log('player found')
+            document.getElementById('balance').innerHTML = ('Balance $' + playerInfo.chips)
+            const hand = document.getElementById('hand');
+            hand.innerHTML = '';
+            console.log(playerInfo)
+            playerInfo.hand.forEach(card => {
+                const cardHtml = document.createElement('img');
+                cardHtml.src = '.\\cards\\normal\\' + card.name;
+                cardHtml.classList.add('deck_card')
+                hand.appendChild(cardHtml);
+            });
+        }
         const socket = io();
 
         function joinGame() {
-            var name=(JSON.parse(localStorage.getItem('user')).name)
-            
-            if (name) {
-                socket.emit('join', name); // Send name to server so it can be added to the current game/hand
-            } 
+            var user = (JSON.parse(localStorage.getItem('user')))
+
+            if (user) {
+                socket.emit('join', user); // Send name to server so it can be added to the current game/hand
+            }
         }
+        socket.on('updateGameBoard', (msg) => {
+            console.log(msg.table)
+            updateGameBoard(msg)
+        });
+
     </script>
 
 </body>

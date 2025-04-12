@@ -24,6 +24,7 @@ CREATE TABLE hands (
 );
 
 CREATE TABLE user_games (
+    id INTEGER PRIMARY KEY,
     user_id INTEGER,
     game_id INTEGER,
     chips INTEGER,

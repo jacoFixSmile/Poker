@@ -33,7 +33,14 @@
             list.innerHTML = '';
             players.forEach(player => {
                 const li = document.createElement('li');
-                li.innerHTML = `ID: ${player.id} | ${player.name} - Chips: ${player.chips} 
+                const statusColor = player.is_online === 1 ? '🟢' : '🔴';
+
+                li.innerHTML = `
+                <div class="tooltip">
+                    ${statusColor}
+                    <span class="tooltiptext">Tooltip text</span>
+            </div>
+            ID: ${player.id} | ${player.name} - Chips: ${player.chips} 
             <button onclick="updatePlayer(${player.id})">Update</button> 
             <button onclick="deletePlayer(${player.id})">Delete</button>`;
                 list.appendChild(li);
@@ -61,6 +68,11 @@
             const response = await fetch('/start_game');
             const players = await response.json();
         }
+        const socket = io();
+
+        socket.on('updateUsers', (msg) => {
+            fetchPlayers()
+        });
     </script>
 
 </body>
