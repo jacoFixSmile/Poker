@@ -52,7 +52,8 @@ class Game {
     }
     createHand() {
         console.log('Starting a set... for game:'+this.id);
-        var new_hand = new Hand(this.players,this.id) // kunnen players zijn die in game zitten & algemeen online staan zo kunnen we een lijstje bekomen
+        const current_users = db.prepare(`SELECT ug.* FROM user_games ug inner join users u on u.id=ug.user_id and u.is_online =1 and game_id= ${this.id}`);
+        var new_hand = new Hand(current_users.all(),this.id) // kunnen players zijn die in game zitten & algemeen online staan zo kunnen we een lijstje bekomen
         this.hands.push(new_hand)
 
     }
@@ -96,9 +97,11 @@ class UserGame{
 }
 class Hand {
     constructor(players, gameId) { //players
+        this.id = null
         this.players = players
         this.gameId = gameId
-        this.id = null
+        this.activeUser=null
+        this.round=1
         this.deck = [
             [
                 "ace_of_clubs.png", "2_of_clubs.png", "3_of_clubs.png", "4_of_clubs.png", "5_of_clubs.png",

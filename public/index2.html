@@ -22,8 +22,8 @@
 
             </div>
             <div id="control">
-                <button id="call">Call</button>
-                <button id="call_fold">Fold/call</button>
+                <button id="check_call">Check/Call</button>
+                <!-- <button id="call_fold">Fold/call</button> -->
                 <button id="fold">Fold</button>
                 <input type="range" min="1" max="100" value="50" class="slider" id="raise">
             </div>
@@ -43,7 +43,7 @@
             getGameBoard()
 
         };
-        
+
         async function getCurrentPlayer() {
             let user = localStorage.getItem("user");
 
@@ -71,22 +71,48 @@
                 list.appendChild(li);
             });
         }
-        async function getGameBoard(){
+        async function getGameBoard() {
             const response = await fetch('/get_game_board');
             const boardResponse = await response.json();
             updateGameBoard(boardResponse)
-       
+
         }
-        function updateGameBoard(boardResponse){
+        function updateGameBoard(boardResponse) {
+            let user = JSON.parse(localStorage.getItem("user"));
             const board = document.getElementById('board');
             board.innerHTML = '';
-            boardResponse.table.forEach(item => {
-                console.log(item)
+            for (var i = 0; i < boardResponse.table.length; i++) {
+                var item = boardResponse.table[i]
                 const card = document.createElement('img');
-                card.src = '.\\cards\\normal\\'+item.name;
+                if (i < boardResponse.round) {
+                    card.src = '.\\cards\\normal\\' + item.name;
+                } else {
+                    card.src = '.\\cards\\normal\\card back orange.png'
+                }
                 card.classList.add('deck_card')
                 board.appendChild(card);
-            }); 
+            }
+            console.log(boardResponse.players)
+            boardResponse.players.forEach(player => {
+                if (player.user_id == user.id) {
+                    updatePlayerGameStats(player)
+                }
+            });
+
+
+        }
+        function updatePlayerGameStats(playerInfo) {
+            console.log('player found')
+            document.getElementById('balance').innerHTML = ('Balance $' + playerInfo.chips)
+            const hand = document.getElementById('hand');
+            hand.innerHTML = '';
+            console.log(playerInfo)
+            playerInfo.hand.forEach(card => {
+                const cardHtml = document.createElement('img');
+                cardHtml.src = '.\\cards\\normal\\' + card.name;
+                cardHtml.classList.add('deck_card')
+                hand.appendChild(cardHtml);
+            });
         }
         const socket = io();
 

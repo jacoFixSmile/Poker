@@ -16,6 +16,7 @@ const database = new DatabaseSync('public/poker.db');
 
 // settings game 
 var game;
+let users = {};
 
 
 app.use(express.static('public'));
@@ -46,8 +47,11 @@ app.get('/start_game', (req, res) => {
     io.emit('lobby', 'trying to contact lobby');
     game = new Game('demo_game')
     game.saveGame()
+    console.log('all users')
+    for (const [key, value] of Object.entries(users)) {
+        game.addPlayer(value);
+      }
     game.createHand()
-    game.addPlayer(15)
     console.log('user_game',game.players)
     io.emit('updateGameBoard', game.getLastHand());
 
@@ -57,7 +61,7 @@ app.get('/get_game_board' , (req, res) => {
 
     if (game == null) {
         console.log('game not found')
-        return res.status('400').json({ error: 'No game exists' });
+        return res.status(400).json({ error: 'No game exists' });
     } else {
         return res.status(201).json(game.getLastHand());
 
@@ -114,7 +118,6 @@ app.post('/players/online', async (req, res) => {
 
 });
 // Store connected users
-let users = {};
 io.on('connection', (socket) => {
     console.log('A user connected:', socket.id);
     // Listen for user joining
@@ -123,6 +126,10 @@ io.on('connection', (socket) => {
         console.log(`${user.name} connected.`);
         const insert = database.prepare('UPDATE users SET is_online=1  WHERE id=(?)');
         insert.run(user.id);
+        if(game){
+            console.log('adding player'+user.id)
+            game.addPlayer(user.id);
+        }
         io.emit('updateUsers', Object.values(users)); // Send updated user list
     });
 

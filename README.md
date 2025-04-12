@@ -51,7 +51,8 @@ Setting up termux on phone
     - [ ] Create a class for every object: Game, Set, Match, card, player, ... 
     - [ ] Remove logging
 
-
+## Usefull
+* https://opengameart.org/content/colorful-poker-card-back
 > [!NOTE]
 > Useful information that users should know, even when skimming content.
  * "rm -rf FolderName" can be used in termux to remove everything from a folder
