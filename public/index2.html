@@ -7,6 +7,7 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Poker host</title>
     <link rel="stylesheet" href="./style.css">
+    <link rel="stylesheet" href="./styles/flexboxgrid.min.css">
     <link rel="icon" href="favicon.ico" type="image/x-icon">
     <script src="/socket.io/socket.io.js"></script>
 </head>
@@ -15,14 +16,14 @@
     <main>
         <h1 id="welcome_sign">Welcome </h1>
         <h3 id="balance">balance: 0 </h3>
-        <div class="game">
-            <div id="board">
+        <div class="game" >
+            <div id="board" class="row around-xs">
             </div>
-            <div id="hand">
+            <div id="hand" class="row  around-xs">
 
             </div>
             <div id="control">
-                <button id="check_call">Check/Call</button>
+                <button id="check_call" class="button">Check/Call</button>
                 <!-- <button id="call_fold">Fold/call</button> -->
                 <button id="fold">Fold</button>
                 <input type="range" min="1" max="100" value="50" class="slider" id="raise">
@@ -89,7 +90,10 @@
                 } else {
                     card.src = '.\\cards\\normal\\card back orange.png'
                 }
+                card.classList.add('col-xs-2')
+                card.classList.add('col-sm-2')
                 card.classList.add('deck_card')
+
                 board.appendChild(card);
             }
             console.log(boardResponse.players)
@@ -110,7 +114,10 @@
             playerInfo.hand.forEach(card => {
                 const cardHtml = document.createElement('img');
                 cardHtml.src = '.\\cards\\normal\\' + card.name;
-                cardHtml.classList.add('deck_card')
+                cardHtml.classList.add('hand_card')
+                cardHtml.classList.add('col-xs-5')
+                cardHtml.classList.add('col-sm-5')
+
                 hand.appendChild(cardHtml);
             });
         }
