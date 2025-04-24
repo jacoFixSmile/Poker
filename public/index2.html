@@ -16,17 +16,19 @@
     <main>
         <h1 id="welcome_sign">Welcome </h1>
         <h3 id="balance">balance: 0 </h3>
-        <div class="game" >
+        <div class="game">
             <div id="board" class="row around-xs">
             </div>
             <div id="hand" class="row  around-xs">
 
             </div>
             <div id="control">
-                <button id="check_call" class="button">Check/Call</button>
+                <button id="check_call" class="button" onclick="handCheck()">Check/Call</button>
+                <button id="raise">Raise</button>
+                <label for="raise_slider" class="raise_label">Raise: <span id="raise-amount">$50</span></label>
+                <input type="range" min="1" max="100" value="50" class="slider" id="raise_slider"> 
                 <!-- <button id="call_fold">Fold/call</button> -->
                 <button id="fold">Fold</button>
-                <input type="range" min="1" max="100" value="50" class="slider" id="raise">
             </div>
         </div>
 
@@ -44,7 +46,11 @@
             getGameBoard()
 
         };
-
+        const slider = document.getElementById('raise_slider');
+        const amount = document.getElementById('raise-amount');
+        slider.addEventListener('input', () => {
+            amount.textContent = `$${slider.value}`;
+        });
         async function getCurrentPlayer() {
             let user = localStorage.getItem("user");
 
@@ -96,16 +102,21 @@
 
                 board.appendChild(card);
             }
-            console.log(boardResponse.players)
+            console.log(boardResponse)
             boardResponse.players.forEach(player => {
                 if (player.user_id == user.id) {
-                    updatePlayerGameStats(player)
+                    updatePlayerGameStats(player,boardResponse.activeUser)
                 }
             });
-
+            if(user.id==boardResponse.activeUser){
+                document.getElementById('control').style.display = "block"; 
+            }else{
+                document.getElementById('control').style.display = "none"; 
+            }
 
         }
-        function updatePlayerGameStats(playerInfo) {
+        function updatePlayerGameStats(playerInfo,activeUser) {
+            // player raise slider min must be the amound of that is raised and max the amound of the palyer cash don't give the option if the player has all in or onther the current raise.
             console.log('player found')
             document.getElementById('balance').innerHTML = ('Balance $' + playerInfo.chips)
             const hand = document.getElementById('hand');
@@ -117,9 +128,24 @@
                 cardHtml.classList.add('hand_card')
                 cardHtml.classList.add('col-xs-5')
                 cardHtml.classList.add('col-sm-5')
-
                 hand.appendChild(cardHtml);
             });
+
+            const raise_slider = document.getElementById('raise_slider');
+            raise_slider.max=playerInfo.chips
+            
+        }
+        async function handCheck(){
+            const response = await  fetch(`/hand/check`, { method: 'POST' });
+            const players = await response.json();
+
+
+        }
+        function handFold(){
+
+        }
+        async function handRaise(){
+
         }
         const socket = io();
 

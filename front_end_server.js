@@ -24,7 +24,6 @@ app.use(express.json());
 //<=====================APP managengent=====================>
 // Route for the homepage
 app.get('/', (req, res) => {
-    console.log("getting base URL")
     if (game != undefined) {
         res.sendFile(__dirname + '/Public/index2.html');
     } else {
@@ -33,7 +32,6 @@ app.get('/', (req, res) => {
     }
 });
 app.get('/admin', (req, res) => {
-    console.log("admin")
     res.sendFile(__dirname + '/Public/admin.html');
 });
 app.get('/lobby', (req, res) => {
@@ -47,17 +45,15 @@ app.get('/start_game', (req, res) => {
     io.emit('lobby', 'trying to contact lobby');
     game = new Game('demo_game')
     game.saveGame()
-    console.log('all users')
     for (const [key, value] of Object.entries(users)) {
         game.addPlayer(value);
-      }
+    }
     game.createHand()
-    console.log('user_game',game.players)
     io.emit('updateGameBoard', game.getLastHand());
 
 });
-app.get('/get_game_board' , (req, res) => {
-    console.log('game not found')
+app.get('/get_game_board', (req, res) => {
+    // console.log('game not found')
 
     if (game == null) {
         console.log('game not found')
@@ -91,7 +87,29 @@ app.post('/players', async (req, res) => {
     }
 
 });
+app.post('/hand/fold', async (req, res) => {
+    const { playerId } = req.body;
+    if (!playerId) return res.status(400).json({ error: 'Player is required' });
+    game.getLastHand().foldPlayer(playerId)
+    io.emit('updateGameBoard', game.getLastHand());
 
+
+});
+app.post('/hand/raise', async (req, res) => {
+    const { amount } = req.body;
+    if (!amount) return res.status(400).json({ error: 'Amount is required' });
+    game.getLastHand().rais(amount)
+    io.emit('updateGameBoard', game.getLastHand());
+
+
+});
+app.post('/hand/check', async (req, res) => {
+    game.getLastHand().check()
+    io.emit('updateGameBoard', game.getLastHand());
+    return res.status(201).json(game.getLastHand());
+
+
+});
 app.delete('/players/:id', async (req, res) => {
     const { id } = req.params; // Get ID from URL
 
@@ -114,7 +132,7 @@ app.delete('/players/:id', async (req, res) => {
 //<=====================player game management=====================>
 app.post('/players/online', async (req, res) => {
     console.log(game.getPlayers())
-   
+
 
 });
 // Store connected users
@@ -126,8 +144,8 @@ io.on('connection', (socket) => {
         console.log(`${user.name} connected.`);
         const insert = database.prepare('UPDATE users SET is_online=1  WHERE id=(?)');
         insert.run(user.id);
-        if(game){
-            console.log('adding player'+user.id)
+        if (game) {
+            console.log('adding player' + user.id)
             game.addPlayer(user.id);
         }
         io.emit('updateUsers', Object.values(users)); // Send updated user list
