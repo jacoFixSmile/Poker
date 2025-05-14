@@ -9,12 +9,13 @@ class Game {
     constructor(name) {
         console.log("====game laun  ced====")
         this.id = null
+        this.smallBlind = null
         this.name = name
         this.players = []
         this.hands = []
         // set game settings, game mode, small bigg, start coins
     }
-    getOnlineGamePlayers(){
+    getOnlineGamePlayers() {
 
         const result = database.prepare(`SELECT ug.* FROM user_games ug inner join users u on u.id=ug.user_id and u.is_online =1`);
         return result.all()
@@ -30,7 +31,7 @@ class Game {
         },);
     }
     async addPlayer(userId) {
-        var new_user=new UserGame(userId,this.id)
+        var new_user = new UserGame(userId, this.id)
         new_user.instantiateUserGame()
         const playerExists = this.players.some(player => player.id === new_user.id);
 
@@ -38,12 +39,12 @@ class Game {
             this.players.push(new_user);
         }
     }
-    async loadAllGamePlayers(){
+    async loadAllGamePlayers() {
         const current_users = db.prepare(`SELECT * FROM user_games where game_id = ${this.id}`);
-        this.players=[]
+        this.players = []
         current_users.all().forEach((item) => {
-            this.players.push(new UserGame(item.user_id,item.game_id))
-          });
+            this.players.push(new UserGame(item.user_id, item.game_id))
+        });
         return this.players
 
     }
@@ -51,9 +52,34 @@ class Game {
         //
     }
     createHand() {
-        console.log('Starting a set... for game:'+this.id);
-        const current_users = db.prepare(`SELECT ug.* FROM user_games ug inner join users u on u.id=ug.user_id and u.is_online =1 and game_id= ${this.id}`);
-        var new_hand = new Hand(current_users.all(),this.id) // kunnen players zijn die in game zitten & algemeen online staan zo kunnen we een lijstje bekomen
+        console.log('Starting a set... for game:' + this.id);
+        const current_users = db.prepare(`SELECT ug.* FROM user_games ug inner join users u on u.id=ug.user_id and u.is_online =1 and game_id= ${this.id} order by user_id asc`);
+        var users = current_users.all()
+        var i = 0;
+        var nextNotFound = true
+
+        do {
+            //als het niet gevonden is pak de eerste als het de laatste is pak die dan dichst bijzende de volgonde id qua grote of terug de eerste
+            console.log(this.smallBlind === null)
+            if (this.smallBlind === null) {
+                this.smallBlind = users[0].user_id;
+                nextNotFound = false;
+            }
+            else if (users[i].user_id >= this.smallBlind) {
+                console.log('next small blind')
+                const nextPosition = (i + 1) % users.length;
+                this.smallBlind = users[nextPosition].user_id;
+                nextNotFound = false;
+            }
+
+            i++;
+        } while (nextNotFound && i <= users.length);
+
+        if (nextNotFound) {
+            this.smallBlind = users[0].user_id;
+        }
+        console.log('Smallblinde: ' + this.smallBlind)
+        var new_hand = new Hand(users, this.id, this.smallBlind) // kunnen players zijn die in game zitten & algemeen online staan zo kunnen we een lijstje bekomen
         this.hands.push(new_hand)
 
     }
@@ -62,46 +88,47 @@ class Game {
         return this.hands[this.hands.length - 1]
     }
 }
-class UserGame{
+class UserGame {
 
-    constructor(userId,gameId){
+    constructor(userId, gameId) {
         this.id = null
-        this.userId=userId
-        this.gameId=gameId
-        this.chips= null
+        this.userId = userId
+        this.gameId = gameId
+        this.chips = null
 
 
     }
-    instantiateUserGame(){
-             // check user does not exists in 
-             const current_user = db.prepare(`SELECT * FROM user_games where user_id = '${this.userId}' AND  game_id = '${this.gameId}'`);
-             if (current_user.all().length==0){
-                const query = db.prepare(`INSERT INTO user_games (user_id, game_id, chips) VALUES (?,?, 1000)`)
-                var run = query.run(this.userId,this.gameId)
-                this.id = run.lastInsertRowid
-                this.chips=1000         
-            }else{
-                this.id=current_user.all()[0].Id
-                this.id=current_user.all()[0].chips
+    instantiateUserGame() {
+        // check user does not exists in 
+        const current_user = db.prepare(`SELECT * FROM user_games where user_id = '${this.userId}' AND  game_id = '${this.gameId}'`);
+        if (current_user.all().length == 0) {
+            const query = db.prepare(`INSERT INTO user_games (user_id, game_id, chips) VALUES (?,?, 1000)`)
+            var run = query.run(this.userId, this.gameId)
+            this.id = run.lastInsertRowid
+            this.chips = 1000
+        } else {
+            this.id = current_user.all()[0].Id
+            this.id = current_user.all()[0].chips
 
-             }
+        }
     }
-    addChips(amount){
-        if(this.chips+amount>=0){
+    addChips(amount) {
+        if (this.chips + amount >= 0) {
             const query = db.prepare(`UPDATE user_games set (chips) VALUES (?) WHERE Id=(?)`)
-            var run = query.run(this.chips+amount,this.id)
-        }else{
+            var run = query.run(this.chips + amount, this.id)
+        } else {
             throw new Error("Chip amount is negativ");
         }
     }
 }
 class Hand {
-    constructor(players, gameId) { //players
+    constructor(players, gameId, smallBlind) { //players
         this.id = null
+        this.smallBlind = smallBlind
         this.players = players
         this.gameId = gameId
-        this.activeUser=null
-        this.round=1
+        this.activeUser = smallBlind
+        this.round = 1
         this.deck = [
             [
                 "ace_of_clubs.png", "2_of_clubs.png", "3_of_clubs.png", "4_of_clubs.png", "5_of_clubs.png",
@@ -132,6 +159,23 @@ class Hand {
         this.table = []
         this.PlayerHands = []
         this.startHand()
+        this.pot = 0
+    }
+    setNextActiveUser() {
+        let userIds = [];
+        for (let i = 0; i < this.players.length; i++) {
+            userIds.push(this.players[i].user_id);
+        }
+
+        const currentIndex = userIds.indexOf(this.activeUser);
+        if(this.activeUser===this.smallBlind){
+            this.round+=1
+        }
+        if (currentIndex === -1 || currentIndex === userIds.length - 1) {
+            this.activeUser = userIds[0];
+        } else {
+            this.activeUser = userIds[currentIndex + 1];
+        }
     }
 
     pickCard() {
@@ -147,12 +191,12 @@ class Hand {
                 }
             }
         } while (isUsedCard)
-        var card = {'id':suit*100+rank, 'name': this.deck[suit][rank], 'suit': suit, "rank": rank }
+        var card = { 'id': suit * 100 + rank, 'name': this.deck[suit][rank], 'suit': suit, "rank": rank }
         this.usedCards.push(card)
         return card
     }
-    getCardFromDeck(name){
-        
+    getCardFromDeck(name) {
+
     }
     printDeck() {
         for (var i = 0; i < this.deck.length; i++) {
@@ -196,9 +240,17 @@ class Hand {
     }
     foldPlayer(id) {
         this.players = this.players.filter(player => player.id !== id);
+        this.setNextActiveUser()
     }
-    // fold functie (gebruiker verwijderen uit deze player lijst en hands)
-    // functie om te raizen
+    rais(amount) {
+        // altijd vanuit gaan dat de huidige player raised
+        this.pot += amount
+        this.setNextActiveUser()
+    }
+    check() {
+        this.setNextActiveUser()
+    }
+
     calculateWinner() {
         for (var i = 0; i < this.players.length; i++) {
             var hand = this.players[i]['hand']
