@@ -59,9 +59,9 @@ class Game {
         var nextNotFound = true
 
         do {
-     //als het niet gevonden is pak de eerste als het de laatste is pak die dan dichst bijzende de volgonde id qua grote of terug de eerste
-        console.log(this.smallBlind=== null)   
-        if (this.smallBlind=== null) {
+            //als het niet gevonden is pak de eerste als het de laatste is pak die dan dichst bijzende de volgonde id qua grote of terug de eerste
+            console.log(this.smallBlind === null)
+            if (this.smallBlind === null) {
                 this.smallBlind = users[0].user_id;
                 nextNotFound = false;
             }
@@ -124,7 +124,7 @@ class UserGame {
 class Hand {
     constructor(players, gameId, smallBlind) { //players
         this.id = null
-        this.smallBlind=smallBlind
+        this.smallBlind = smallBlind
         this.players = players
         this.gameId = gameId
         this.activeUser = smallBlind
@@ -164,17 +164,19 @@ class Hand {
     setNextActiveUser() {
         let userIds = [];
         for (let i = 0; i < this.players.length; i++) {
-          userIds.push(this.players[i].user_id);
+            userIds.push(this.players[i].user_id);
         }
-        
+
         const currentIndex = userIds.indexOf(this.activeUser);
-        
-        if (currentIndex === -1 || currentIndex === userIds.length - 1) {
-          this.activeUser = userIds[0];
-        } else {
-          this.activeUser = userIds[currentIndex + 1];
+        if(this.activeUser===this.smallBlind){
+            this.round+=1
         }
-      }
+        if (currentIndex === -1 || currentIndex === userIds.length - 1) {
+            this.activeUser = userIds[0];
+        } else {
+            this.activeUser = userIds[currentIndex + 1];
+        }
+    }
 
     pickCard() {
         if (this.usedCards.includes())
@@ -240,15 +242,15 @@ class Hand {
         this.players = this.players.filter(player => player.id !== id);
         this.setNextActiveUser()
     }
-    rais(amount){
+    rais(amount) {
         // altijd vanuit gaan dat de huidige player raised
-        this.pot+=amount
+        this.pot += amount
         this.setNextActiveUser()
     }
-    check(){
+    check() {
         this.setNextActiveUser()
     }
-  
+
     calculateWinner() {
         for (var i = 0; i < this.players.length; i++) {
             var hand = this.players[i]['hand']
