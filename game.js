@@ -125,10 +125,10 @@ class Hand {
     constructor(players, gameId, smallBlind) { //players
         this.id = null
         this.smallBlind = smallBlind
+        this.activeUser = smallBlind
         this.players = players
         this.gameId = gameId
-        this.activeUser = smallBlind
-        this.round = 1
+        this.round = 0
         this.deck = [
             [
                 "ace_of_clubs.png", "2_of_clubs.png", "3_of_clubs.png", "4_of_clubs.png", "5_of_clubs.png",
@@ -157,25 +157,33 @@ class Hand {
         ]
         this.usedCards = []
         this.table = []
+        this.raised=false
         this.PlayerHands = []
-        this.startHand()
         this.pot = 0
+        this.startHand()
     }
     setNextActiveUser() {
         let userIds = [];
         for (let i = 0; i < this.players.length; i++) {
             userIds.push(this.players[i].user_id);
         }
-
         const currentIndex = userIds.indexOf(this.activeUser);
-        if(this.activeUser===this.smallBlind){
-            this.round+=1
-        }
+
         if (currentIndex === -1 || currentIndex === userIds.length - 1) {
             this.activeUser = userIds[0];
         } else {
             this.activeUser = userIds[currentIndex + 1];
         }
+        if(this.activeUser===this.smallBlind && !this.raised & this.round===0){
+            this.round+=3
+        }else if(this.activeUser===this.smallBlind && !this.raised  & this.round===5){
+            this.round=0
+        }else if(this.activeUser===this.smallBlind && !this.raised ){
+            this.round+=1
+        }else if(this.activeUser===this.smallBlind && this.raised){
+            this.raised=false
+        }
+
     }
 
     pickCard() {
@@ -244,7 +252,8 @@ class Hand {
     }
     rais(amount) {
         // altijd vanuit gaan dat de huidige player raised
-        this.pot += amount
+        this.pot += Number(amount)
+        this.raised=true
         this.setNextActiveUser()
     }
     check() {
@@ -301,6 +310,7 @@ class Hand {
 
 
 }
+ 
 class Player {
     constructor(id, name, chips) {
         this.id = id

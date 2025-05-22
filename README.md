@@ -33,7 +33,7 @@ Setting up termux on phone
     - [ ] Dispay cards
     => Voorkeur zou hier gaan naar hand met combinatie via db en back end maar lijkt ingewikeld. Daarom mss logica niveau afbaken tot op de js klassen & sql enkel de gegevens weglegoggen omdat het altijd intresant is om later statiesteken op te trekken
     - [X] Show actions
-    - [ ] Raise
+    - [x] Raise
     - [ ] Fold
     - [ ] Check
     - [ ] Show active player
@@ -50,7 +50,9 @@ Setting up termux on phone
 - [ ] Code cleanup: 
     - [ ] Create a class for every object: Game, Set, Match, card, player, ... 
     - [ ] Remove logging
-
+### TODO
+* Extra class in game.js turn zodat elke turn appart word berekend ook als iemand all in doet halver wegen dat het tot daar vr die persoon word berekend.
+* Tonen welke spailer allemaal hebben gefold/raised
 ## Usefull
 * https://opengameart.org/content/colorful-poker-card-back
 > [!NOTE]

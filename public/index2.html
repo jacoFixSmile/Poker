@@ -17,6 +17,8 @@
         <h1 id="welcome_sign">Welcome </h1>
         <h3 id="balance">balance: 0 </h3>
         <div class="game">
+            <div class="row around-xs" id="pot">
+            </div>
             <div id="board" class="row around-xs">
             </div>
             <div id="hand" class="row  around-xs">
@@ -24,25 +26,25 @@
             </div>
             <div id="control">
                 <button id="check_call" class="button" onclick="handCheck()">Check/Call</button>
-                <button id="raise">Raise</button>
+                <button id="raise" onclick="handRaise()">Raise</button>
                 <label for="raise_slider" class="raise_label">Raise: <span id="raise-amount">$50</span></label>
-                <input type="range" min="1" max="100" value="50" class="slider" id="raise_slider"> 
+                <input type="range" min="1" max="100" value="50" class="slider" id="raise_slider">
                 <!-- <button id="call_fold">Fold/call</button> -->
                 <button id="fold">Fold</button>
+            </div>
+
+            <div class="row around-xs" id="board_players">
+
             </div>
         </div>
 
 
-
-        <h2>🟢 Online Players</h2>
-        <ul id="playersList"></ul>
     </main>
 
     <script>
 
         window.onload = () => {
             getCurrentPlayer();
-            fetchPlayers();
             getGameBoard()
 
         };
@@ -65,26 +67,14 @@
 
         }
 
-        // get players 
-        async function fetchPlayers() {
-            console.log('fetchPlayers')
-            const response = await fetch('/players');
-            const players = await response.json();
-            const list = document.getElementById('playersList');
-            list.innerHTML = '';
-            players.forEach(player => {
-                const li = document.createElement('li');
-                li.textContent = `${player.name} - Chips: ${player.chips}`;
-                list.appendChild(li);
-            });
-        }
+
         async function getGameBoard() {
             const response = await fetch('/get_game_board');
             const boardResponse = await response.json();
             updateGameBoard(boardResponse)
 
         }
-        function updateGameBoard(boardResponse) {
+        async function updateGameBoard(boardResponse) {
             let user = JSON.parse(localStorage.getItem("user"));
             const board = document.getElementById('board');
             board.innerHTML = '';
@@ -99,23 +89,51 @@
                 card.classList.add('col-xs-2')
                 card.classList.add('col-sm-2')
                 card.classList.add('deck_card')
+                const pot = document.getElementById('pot');
+                pot.innerHTML = "Pot: " + boardResponse.pot
 
                 board.appendChild(card);
             }
             console.log(boardResponse)
+            // set active user
             boardResponse.players.forEach(player => {
                 if (player.user_id == user.id) {
-                    updatePlayerGameStats(player,boardResponse.activeUser)
+                    updatePlayerGameStats(player, boardResponse.activeUser, boardResponse.raised,boardResponse.pot)
                 }
             });
-            if(user.id==boardResponse.activeUser){
-                document.getElementById('control').style.display = "block"; 
-            }else{
-                document.getElementById('control').style.display = "none"; 
+            if (user.id == boardResponse.activeUser) {
+                document.getElementById('control').style.display = "block";
+            } else {
+                document.getElementById('control').style.display = "none";
+            }
+            updatePlayerBoard(boardResponse.players, boardResponse.smallBlind, boardResponse.activeUser, user.id)
+
+
+        }
+        async function updatePlayerBoard(players, smallBlind, activeUser, own_id) {
+            const board_players = document.getElementById('board_players');
+            board_players.innerHTML = ''
+            var full_players = []
+            for (const player of players) {
+                const response = await fetch(`/players/${player.user_id}`, { method: 'GET' });
+                const full_player = await response.json();
+                full_players.push(full_player[0])
+                const playerHtml = document.createElement('div');
+                if (player.user_id === smallBlind) {
+                    playerHtml.innerText = '[B]' + full_player[0].name
+                } else {
+                    playerHtml.innerText = full_player[0].name
+                }
+                if (player.user_id === activeUser) {
+                    playerHtml.classList.add('blink_me');
+                }
+                board_players.appendChild(playerHtml)
+
             }
 
         }
-        function updatePlayerGameStats(playerInfo,activeUser) {
+
+        function updatePlayerGameStats(playerInfo, activeUser, raised,pot) {
             // player raise slider min must be the amound of that is raised and max the amound of the palyer cash don't give the option if the player has all in or onther the current raise.
             console.log('player found')
             document.getElementById('balance').innerHTML = ('Balance $' + playerInfo.chips)
@@ -132,20 +150,34 @@
             });
 
             const raise_slider = document.getElementById('raise_slider');
-            raise_slider.max=playerInfo.chips
-            
+            console.log('raised:'+raised)
+
+            if (raised) {
+                document.getElementById('check_call').style.display = "none";
+                raise_slider.min = pot
+            } else {
+                document.getElementById('check_call').style.display = "block";
+            }
+            raise_slider.max = playerInfo.chips
+
         }
-        async function handCheck(){
-            const response = await  fetch(`/hand/check`, { method: 'POST' });
+        async function handCheck() {
+            const response = await fetch(`/hand/check`, { method: 'POST' });
             const players = await response.json();
 
 
         }
-        function handFold(){
+        async function handFold() {
 
         }
-        async function handRaise(){
-
+        async function handRaise() {
+            const slider = document.getElementById('raise_slider');
+            const response = await fetch('/hand/raise', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ amount: slider.value })
+            });
+            const players = await response.json();
         }
         const socket = io();
 

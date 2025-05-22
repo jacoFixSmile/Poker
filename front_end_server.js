@@ -52,6 +52,11 @@ app.get('/start_game', (req, res) => {
     io.emit('updateGameBoard', game.getLastHand());
 
 });
+app.get('/start_hand', (req, res) => {
+    game.createHand()
+    io.emit('updateGameBoard', game.getLastHand());
+
+});
 app.get('/get_game_board', (req, res) => {
     // console.log('game not found')
 
@@ -85,6 +90,13 @@ app.post('/players', async (req, res) => {
 
         return res.status(500).json({ error: 'Name is already in use' })
     }
+
+});
+app.get('/players/:id', async (req, res) => {
+    const { id } = req.params; // Get ID from URL
+    if (!id) return res.status(400).json({ error: 'Player ID is required' });
+    const result = database.prepare(`SELECT * FROM users where id like '${id}'`);
+    res.status(200).json(result.all());
 
 });
 app.post('/hand/fold', async (req, res) => {
@@ -135,6 +147,8 @@ app.post('/players/online', async (req, res) => {
 
 
 });
+
+
 // Store connected users
 io.on('connection', (socket) => {
     console.log('A user connected:', socket.id);
