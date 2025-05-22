@@ -25,10 +25,11 @@
 
             </div>
             <div id="control">
-                <button id="check_call" class="button" onclick="handCheck()">Check/Call</button>
+                <button id="check" class="button" onclick="handCheck()">Check</button>
+                <button id="call" class="button" onclick="handCall()">Call</button>
                 <button id="raise" onclick="handRaise()">Raise</button>
-                <label for="raise_slider" class="raise_label">Raise: <span id="raise-amount">$50</span></label>
-                <input type="range" min="1" max="100" value="50" class="slider" id="raise_slider">
+                <label for="raise_slider" class="raise_label">Raise: <span id="raise_amount">$1</span></label>
+                <input type="range" min="1" max="100" value="1" class="slider" id="raise_slider">
                 <!-- <button id="call_fold">Fold/call</button> -->
                 <button id="fold">Fold</button>
             </div>
@@ -49,7 +50,7 @@
 
         };
         const slider = document.getElementById('raise_slider');
-        const amount = document.getElementById('raise-amount');
+        const amount = document.getElementById('raise_amount');
         slider.addEventListener('input', () => {
             amount.textContent = `$${slider.value}`;
         });
@@ -98,7 +99,7 @@
             // set active user
             boardResponse.players.forEach(player => {
                 if (player.user_id == user.id) {
-                    updatePlayerGameStats(player, boardResponse.activeUser, boardResponse.raised,boardResponse.pot)
+                    updatePlayerGameStats(player, boardResponse.activeUser, boardResponse.raised, boardResponse.raised_amount)
                 }
             });
             if (user.id == boardResponse.activeUser) {
@@ -133,7 +134,7 @@
 
         }
 
-        function updatePlayerGameStats(playerInfo, activeUser, raised,pot) {
+        function updatePlayerGameStats(playerInfo, activeUser, raised, raisedAmount) {
             // player raise slider min must be the amound of that is raised and max the amound of the palyer cash don't give the option if the player has all in or onther the current raise.
             console.log('player found')
             document.getElementById('balance').innerHTML = ('Balance $' + playerInfo.chips)
@@ -150,13 +151,21 @@
             });
 
             const raise_slider = document.getElementById('raise_slider');
-            console.log('raised:'+raised)
+            console.log('raised:' + raised)
 
             if (raised) {
-                document.getElementById('check_call').style.display = "none";
-                raise_slider.min = pot
+                document.getElementById('check').style.display = "none";
+                document.getElementById('call').style.display = "block";
+                document.getElementById('raise_amount').textContent='$'+raisedAmount
+                raise_slider.min = raisedAmount
+                raise_slider.value = raisedAmount
+
             } else {
-                document.getElementById('check_call').style.display = "block";
+                raise_slider.min = 0
+                raise_slider.value = 0
+                document.getElementById('raise_amount').textContent='$0'
+                document.getElementById('check').style.display = "block";
+                document.getElementById('call').style.display = "none";
             }
             raise_slider.max = playerInfo.chips
 
@@ -169,6 +178,11 @@
         }
         async function handFold() {
 
+
+        }
+        async function handCall() {
+            const response = await fetch(`/hand/call`, { method: 'POST' });
+            const players = await response.json();
         }
         async function handRaise() {
             const slider = document.getElementById('raise_slider');

@@ -158,6 +158,8 @@ class Hand {
         this.usedCards = []
         this.table = []
         this.raised=false
+        this.raised_player=false
+        this.raised_amount=0
         this.PlayerHands = []
         this.pot = 0
         this.startHand()
@@ -168,21 +170,34 @@ class Hand {
             userIds.push(this.players[i].user_id);
         }
         const currentIndex = userIds.indexOf(this.activeUser);
-
+        // WERKT NOG NIET VOLLEDIG GOED ALS IEMAND RAISED MOET HET TERUG TOT DIE SPELER GAAN EN NIET TOT DE SMALL BLINED 
+        // Set next user
         if (currentIndex === -1 || currentIndex === userIds.length - 1) {
             this.activeUser = userIds[0];
         } else {
             this.activeUser = userIds[currentIndex + 1];
         }
-        if(this.activeUser===this.smallBlind && !this.raised & this.round===0){
+        // Set round
+        if((this.activeUser===this.smallBlind || this.raised_player===this.activeUser) && !this.raised & this.round===0){
             this.round+=3
-        }else if(this.activeUser===this.smallBlind && !this.raised  & this.round===5){
-            this.round=0
-        }else if(this.activeUser===this.smallBlind && !this.raised ){
-            this.round+=1
-        }else if(this.activeUser===this.smallBlind && this.raised){
+            this.raised_amount=0
             this.raised=false
+            this.raised_player=false
+        }else if((this.activeUser===this.smallBlind || this.raised_player===this.activeUser) && !this.raised  & this.round===5){
+            this.round=0
+            this.raised_amount=0
+            this.raised=false
+            this.raised_player=false
+        }else if((this.activeUser===this.smallBlind || this.raised_player===this.activeUser) && !this.raised ){
+            this.round+=1
+            this.raised_amount=0
+            this.raised=false
+            this.raised_player=false
+        }else if(this.raised_player===this.activeUser){
+            this.raised=false
+
         }
+
 
     }
 
@@ -254,12 +269,17 @@ class Hand {
         // altijd vanuit gaan dat de huidige player raised
         this.pot += Number(amount)
         this.raised=true
+        this.raised_player=this.activeUser
+        this.raised_amount=Number(amount)
         this.setNextActiveUser()
     }
     check() {
         this.setNextActiveUser()
     }
-
+    call(){
+        this.pot+=this.raised_amount
+        this.setNextActiveUser()
+    }
     calculateWinner() {
         for (var i = 0; i < this.players.length; i++) {
             var hand = this.players[i]['hand']

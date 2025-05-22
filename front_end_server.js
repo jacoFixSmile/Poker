@@ -122,6 +122,13 @@ app.post('/hand/check', async (req, res) => {
 
 
 });
+app.post('/hand/call', async (req, res) => {
+    game.getLastHand().call()
+    io.emit('updateGameBoard', game.getLastHand());
+    return res.status(201).json(game.getLastHand());
+
+
+});
 app.delete('/players/:id', async (req, res) => {
     const { id } = req.params; // Get ID from URL
 
