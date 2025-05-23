@@ -128,31 +128,31 @@ class Hand {
         this.activeUser = smallBlind
         this.players = players
         this.gameId = gameId
-        this.round = 0
+        this.round = 5
         this.deck = [
             [
-                "ace_of_clubs.png", "2_of_clubs.png", "3_of_clubs.png", "4_of_clubs.png", "5_of_clubs.png",
+                "2_of_clubs.png", "3_of_clubs.png", "4_of_clubs.png", "5_of_clubs.png",
                 "6_of_clubs.png", "7_of_clubs.png", "8_of_clubs.png", "9_of_clubs.png", "10_of_clubs.png",
-                "jack_of_clubs.png", "jack_of_clubs2.png", "queen_of_clubs.png", "queen_of_clubs2.png",
-                "king_of_clubs.png", "king_of_clubs2.png"
+                "jack_of_clubs2.png","queen_of_clubs2.png",
+                "king_of_clubs2.png","ace_of_clubs.png"
             ],
             [
-                "ace_of_diamonds.png", "2_of_diamonds.png", "3_of_diamonds.png", "4_of_diamonds.png", "5_of_diamonds.png",
+                 "2_of_diamonds.png", "3_of_diamonds.png", "4_of_diamonds.png", "5_of_diamonds.png",
                 "6_of_diamonds.png", "7_of_diamonds.png", "8_of_diamonds.png", "9_of_diamonds.png", "10_of_diamonds.png",
-                "jack_of_diamonds.png", "jack_of_diamonds2.png", "queen_of_diamonds.png", "queen_of_diamonds2.png",
-                "king_of_diamonds.png", "king_of_diamonds2.png"
+                "jack_of_diamonds2.png", "queen_of_diamonds2.png",
+                "king_of_diamonds2.png","ace_of_diamonds.png",
             ],
             [
-                "ace_of_hearts.png", "2_of_hearts.png", "3_of_hearts.png", "4_of_hearts.png", "5_of_hearts.png",
+                "2_of_hearts.png", "3_of_hearts.png", "4_of_hearts.png", "5_of_hearts.png",
                 "6_of_hearts.png", "7_of_hearts.png", "8_of_hearts.png", "9_of_hearts.png", "10_of_hearts.png",
-                "jack_of_hearts.png", "jack_of_hearts2.png", "queen_of_hearts.png", "queen_of_hearts2.png",
-                "king_of_hearts.png", "king_of_hearts2.png"
+                 "jack_of_hearts2.png", "queen_of_hearts2.png",
+                "king_of_hearts2.png","ace_of_hearts.png"
             ],
             [
-                "ace_of_spades.png", "ace_of_spades2.png", "2_of_spades.png", "3_of_spades.png", "4_of_spades.png",
+                "2_of_spades.png", "3_of_spades.png", "4_of_spades.png",
                 "5_of_spades.png", "6_of_spades.png", "7_of_spades.png", "8_of_spades.png", "9_of_spades.png",
-                "10_of_spades.png", "jack_of_spades.png", "jack_of_spades2.png", "queen_of_spades.png", "queen_of_spades2.png",
-                "king_of_spades.png", "king_of_spades2.png"
+                "10_of_spades.png",  "jack_of_spades2.png", "queen_of_spades2.png",
+                "king_of_spades2.png","ace_of_spades.png"
             ]
         ]
         this.usedCards = []
@@ -162,6 +162,7 @@ class Hand {
         this.raised_amount=0
         this.PlayerHands = []
         this.pot = 0
+        this.scores=null
         this.startHand()
     }
     setNextActiveUser() {
@@ -178,17 +179,14 @@ class Hand {
             this.activeUser = userIds[currentIndex + 1];
         }
         // Set round
-        if((this.activeUser===this.smallBlind || this.raised_player===this.activeUser) && !this.raised & this.round===0){
+        if(((this.activeUser===this.smallBlind && !this.raised ) || (this.raised_player===this.activeUser && this.raised )) & this.round===0){
             this.round+=3
             this.raised_amount=0
             this.raised=false
             this.raised_player=false
-        }else if((this.activeUser===this.smallBlind || this.raised_player===this.activeUser) && !this.raised  & this.round===5){
-            this.round=0
-            this.raised_amount=0
-            this.raised=false
-            this.raised_player=false
-        }else if((this.activeUser===this.smallBlind || this.raised_player===this.activeUser) && !this.raised ){
+        }else if(((this.activeUser===this.smallBlind && !this.raised ) || (this.raised_player===this.activeUser && this.raised )) & this.round===5){
+            this.scores=this.calculateWinner()
+        }else if(((this.activeUser===this.smallBlind && !this.raised ) || (this.raised_player===this.activeUser && this.raised )) ){
             this.round+=1
             this.raised_amount=0
             this.raised=false
@@ -207,7 +205,7 @@ class Hand {
         do {
             isUsedCard = false
             var suit = getRandomInt(4)
-            var rank = getRandomInt(16)
+            var rank = getRandomInt(13)
             for (var i = 0; i < this.usedCards.length; i++) {
                 if (this.usedCards[i].name === this.deck[suit][rank]) {
                     isUsedCard = true;
@@ -281,14 +279,22 @@ class Hand {
         this.setNextActiveUser()
     }
     calculateWinner() {
+        console.log("start calculating winner")
+        var scores=[]
         for (var i = 0; i < this.players.length; i++) {
             var hand = this.players[i]['hand']
             var possible = this.table.concat(hand)
-            console.log(this.evaluatePlayerHand(possible))
+            var score=this.evaluatePlayerHand(possible)
+            score.player=this.players[i]
+            scores.push(score)
 
         }
+        return scores
     }
+    
     evaluatePlayerHand(hand) {
+        console.log('hand ranking')
+        console.log(hand)
         hand.sort((a, b) => a.rank - b.rank);  // Sort by rank
 
         const ranks = hand.map(card => card.rank);
@@ -297,35 +303,47 @@ class Hand {
 
         // Count how many times each rank appears
         ranks.forEach(rank => rankCounts[rank] = (rankCounts[rank] || 0) + 1);
-
+        console.log("ranks")
+        console.log(ranks)
+        console.log("suits")
+        console.log(suits)
+        console.log("rankCounts")
+        console.log(rankCounts)
         const counts = Object.values(rankCounts).sort((a, b) => b - a); // Get counts sorted descending
         const uniqueRanks = Object.keys(rankCounts).map(Number).sort((a, b) => a - b);
-
-        const isFlush = new Hand(suits).size === 1;  // If all suits are the same
+        console.log("counts")
+        console.log(counts)
+        const isFlush = new Set(suits).size === 1;  // If all suits are the same
         const isStraight = uniqueRanks.length === 5 && (uniqueRanks[4] - uniqueRanks[0] === 4 || (uniqueRanks.includes(14) && uniqueRanks.slice(0, 4).join(',') === "2,3,4,5")); // Handles Ace-low straight
 
-        let highestPair = null;
+        let pairs = [];
         let highestTriple = null;
         let highestStraight = isStraight ? uniqueRanks[uniqueRanks.length - 1] : null; // Highest card in straight
 
         // Find the highest pair or triple
         for (let rank in rankCounts) {
-            if (rankCounts[rank] === 2) highestPair = Math.max(highestPair || 0, Number(rank));
-            if (rankCounts[rank] === 3) highestTriple = Math.max(highestTriple || 0, Number(rank));
+            if (rankCounts[rank] === 2) {
+                pairs.push(Number(rank));
+            }
+            if (rankCounts[rank] === 3) {
+                highestTriple = Math.max(highestTriple || 0, Number(rank));
+            }
         }
-
+        pairs.sort((a, b) => b - a); // Sort descending
+        let highestPair = pairs[0] || null;
+        let secondPair = pairs[1] || null;
         // Hand Rankings (Higher number = Stronger hand)
         if (isFlush && isStraight && ranks.includes(14)) return { rank: 1000, name: "Royal Flush" };
         if (isFlush && isStraight) return { rank: (900 + highestStraight), name: `Straight Flush (High card: ${highestStraight})` };
-        if (counts[0] === 4) return { rank: 800 + uniqueRanks.find(rank => rankCounts[rank] === 4), name: `Four of a Kind (High card: ${uniqueRanks.find(rank => rankCounts[rank] === 4)})` };
-        if (counts[0] === 3 && counts[1] === 2) return { rank: 700 + highestTriple * 3 + highestPair * 2, name: `Full House (Trips: ${highestTriple}, Pair: ${highestPair})` };
+        if (counts[0] === 4) return { rank: 800 + uniqueRanks.find(rank => rankCounts[rank] === 4)+(ranks[ranks.length - 1]/10), name: `Four of a Kind (High card: ${uniqueRanks.find(rank => rankCounts[rank] === 4)})` };
+        if (counts[0] === 3 && counts[1] === 2) return { rank: 700 + highestTriple * 3 + pairs[0] * 2, name: `Full House (Trips: ${highestTriple}, Pair: ${pairs[0]})` };
         if (isFlush) return { rank: 600, name: "Flush" };
         if (isStraight) return { rank: 500 + highestStraight, name: `Straight (High card: ${highestStraight})` };
-        if (counts[0] === 3) return { rank: 400 + highestTriple, name: `Three of a Kind (High card: ${highestTriple})` };
-        if (counts[0] === 2 && counts[1] === 2) return { rank: 300 + highestPair, name: `Two Pair (Highest Pair: ${highestPair})` };
-        if (counts[0] === 2) return { rank: 200 + highestPair, name: `One Pair (High card: ${highestPair})` };
+        if (counts[0] === 3) return { rank: 400 + highestTriple+(ranks[ranks.length - 1]/10), name: `Three of a Kind (High card: ${highestTriple})` };
+        if (pairs.length === 2) return { rank: 300 + highestPair + secondPair/10+(ranks[ranks.length - 1]/100), name: `Two Pair (Pair1: ${pairs[0]} & Pair2: ${pairs[1]})` };
+        if (pairs.length === 1) return { rank: 200 + pairs[0]+(ranks[ranks.length - 1]/10), name: `One Pair (High card: ${pairs[0]})` };
 
-        return { rank: 1, name: `High Card (${ranks[ranks.length - 1]})` };
+        return { rank: 1+ranks[ranks.length - 1], name: `High Card (${ranks[ranks.length - 1]})` };
     }
 
 

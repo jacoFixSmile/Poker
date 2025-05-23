@@ -78,38 +78,47 @@
         async function updateGameBoard(boardResponse) {
             let user = JSON.parse(localStorage.getItem("user"));
             const board = document.getElementById('board');
-            board.innerHTML = '';
-            for (var i = 0; i < boardResponse.table.length; i++) {
-                var item = boardResponse.table[i]
-                const card = document.createElement('img');
-                if (i < boardResponse.round) {
-                    card.src = '.\\cards\\normal\\' + item.name;
+            if (boardResponse.scores == null) {
+                board.innerHTML = '';
+                for (var i = 0; i < boardResponse.table.length; i++) {
+                    var item = boardResponse.table[i]
+                    const card = document.createElement('img');
+                    if (i < boardResponse.round) {
+                        card.src = '.\\cards\\normal\\' + item.name;
+                        card.id=item.name
+                    } else {
+                        card.src = '.\\cards\\normal\\card back orange.png'
+                    }
+                    card.classList.add('col-xs-2')
+                    card.classList.add('col-sm-2')
+                    card.classList.add('deck_card')
+
+                    const pot = document.getElementById('pot');
+                    pot.innerHTML = "Pot: " + boardResponse.pot
+
+                    board.appendChild(card);
+                }
+                console.log(boardResponse)
+                // set active user
+                boardResponse.players.forEach(player => {
+                    if (player.user_id == user.id) {
+                        updatePlayerGameStats(player, boardResponse.activeUser, boardResponse.raised, boardResponse.raised_amount)
+                    }
+                });
+                if (user.id == boardResponse.activeUser) {
+                    document.getElementById('control').style.display = "block";
                 } else {
-                    card.src = '.\\cards\\normal\\card back orange.png'
+                    document.getElementById('control').style.display = "none";
                 }
-                card.classList.add('col-xs-2')
-                card.classList.add('col-sm-2')
-                card.classList.add('deck_card')
-                const pot = document.getElementById('pot');
-                pot.innerHTML = "Pot: " + boardResponse.pot
-
-                board.appendChild(card);
-            }
-            console.log(boardResponse)
-            // set active user
-            boardResponse.players.forEach(player => {
-                if (player.user_id == user.id) {
-                    updatePlayerGameStats(player, boardResponse.activeUser, boardResponse.raised, boardResponse.raised_amount)
-                }
-            });
-            if (user.id == boardResponse.activeUser) {
-                document.getElementById('control').style.display = "block";
+                updatePlayerBoard(boardResponse.players, boardResponse.smallBlind, boardResponse.activeUser, user.id)
             } else {
-                document.getElementById('control').style.display = "none";
+                displayWinnerStats(boardResponse.scores, user.id)
             }
-            updatePlayerBoard(boardResponse.players, boardResponse.smallBlind, boardResponse.activeUser, user.id)
+        }
 
-
+        function displayWinnerStats(scores, user) {
+            const board_players = document.getElementById('board_players');
+            console.log(scores)
         }
         async function updatePlayerBoard(players, smallBlind, activeUser, own_id) {
             const board_players = document.getElementById('board_players');
@@ -144,6 +153,7 @@
             playerInfo.hand.forEach(card => {
                 const cardHtml = document.createElement('img');
                 cardHtml.src = '.\\cards\\normal\\' + card.name;
+                cardHtml.id = card.name;
                 cardHtml.classList.add('hand_card')
                 cardHtml.classList.add('col-xs-5')
                 cardHtml.classList.add('col-sm-5')
@@ -156,14 +166,14 @@
             if (raised) {
                 document.getElementById('check').style.display = "none";
                 document.getElementById('call').style.display = "block";
-                document.getElementById('raise_amount').textContent='$'+raisedAmount
+                document.getElementById('raise_amount').textContent = '$' + raisedAmount
                 raise_slider.min = raisedAmount
                 raise_slider.value = raisedAmount
 
             } else {
                 raise_slider.min = 0
                 raise_slider.value = 0
-                document.getElementById('raise_amount').textContent='$0'
+                document.getElementById('raise_amount').textContent = '$0'
                 document.getElementById('check').style.display = "block";
                 document.getElementById('call').style.display = "none";
             }
@@ -203,7 +213,6 @@
             }
         }
         socket.on('updateGameBoard', (msg) => {
-            console.log(msg.table)
             updateGameBoard(msg)
         });
 
