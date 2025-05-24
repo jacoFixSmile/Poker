@@ -24,6 +24,7 @@
             <div id="hand" class="row  around-xs">
 
             </div>
+            <button id="new_hand" style="display: none">Click for new hand</button>
             <div id="control">
                 <button id="check" class="button" onclick="handCheck()">Check</button>
                 <button id="call" class="button" onclick="handCall()">Call</button>
@@ -49,6 +50,8 @@
             getGameBoard()
 
         };
+        var newHandButton = document.getElementById('new_hand')
+
         const slider = document.getElementById('raise_slider');
         const amount = document.getElementById('raise_amount');
         slider.addEventListener('input', () => {
@@ -85,9 +88,12 @@
                     const card = document.createElement('img');
                     if (i < boardResponse.round) {
                         card.src = '.\\cards\\normal\\' + item.name;
-                        card.id=item.name
+                        card.alt = item.name
+                        card.id = item.name
                     } else {
                         card.src = '.\\cards\\normal\\card back orange.png'
+                        card.alt = 'back_card'
+
                     }
                     card.classList.add('col-xs-2')
                     card.classList.add('col-sm-2')
@@ -118,7 +124,42 @@
 
         function displayWinnerStats(scores, user) {
             const board_players = document.getElementById('board_players');
-            console.log(scores)
+            document.getElementById('control').style.display = "none";
+            const highestRank = Math.max(...scores.map(score => Number(score.rank)));
+            for (score in scores) {
+                let playerHtml = document.getElementById('user_id_' + scores[score].player.user_id);
+                playerHtml.classList.remove('blink_me');
+                let card_row = document.createElement('div');
+                card_row.classList.add('row')
+                let card1 = document.createElement('img');
+                card1.src = '.\\cards\\normal\\' + scores[score].player.hand[0].name;
+                card1.alt = scores[score].player.hand[0].name
+                card1.classList.add('col-xs-2')
+                card1.classList.add('col-sm-2')
+                card1.classList.add('small_card')
+                card_row.appendChild(card1);
+                let card2 = document.createElement('img');
+                card2.src = '.\\cards\\normal\\' + scores[score].player.hand[1].name;
+                card2.alt = scores[score].player.hand[1].name
+                card2.classList.add('col-xs-2')
+                card2.classList.add('col-sm-2')
+                card2.classList.add('small_card')
+                card_row.appendChild(card2);
+                if (highestRank != scores[score].rank) {
+                    playerHtml.classList.remove('blink_me');
+                } else {
+                    playerHtml.classList.add('blink_me');
+                    playerHtml.classList.add('winner');
+
+
+                }
+                if (highestRank === scores[score].rank && user === scores[score].player.user_id) {
+                    newHandButton.style.display = "block";
+                    playerHtml.appendChild(card_row)
+
+
+                }
+            }
         }
         async function updatePlayerBoard(players, smallBlind, activeUser, own_id) {
             const board_players = document.getElementById('board_players');
@@ -129,14 +170,19 @@
                 const full_player = await response.json();
                 full_players.push(full_player[0])
                 const playerHtml = document.createElement('div');
+                const playerName = document.createElement('div');
                 if (player.user_id === smallBlind) {
-                    playerHtml.innerText = '[B]' + full_player[0].name
+                    playerName.innerText = '[B]' + full_player[0].name
                 } else {
-                    playerHtml.innerText = full_player[0].name
+                    playerName.innerText = full_player[0].name
                 }
                 if (player.user_id === activeUser) {
                     playerHtml.classList.add('blink_me');
                 }
+                playerHtml.id = 'user_id_' + player.user_id
+                playerHtml.classList.add('col-xs-5')
+                playerName.classList.add('row')
+                playerHtml.appendChild(playerName)
                 board_players.appendChild(playerHtml)
 
             }
@@ -153,6 +199,7 @@
             playerInfo.hand.forEach(card => {
                 const cardHtml = document.createElement('img');
                 cardHtml.src = '.\\cards\\normal\\' + card.name;
+                cardHtml.alt = card.name;
                 cardHtml.id = card.name;
                 cardHtml.classList.add('hand_card')
                 cardHtml.classList.add('col-xs-5')
@@ -215,7 +262,11 @@
         socket.on('updateGameBoard', (msg) => {
             updateGameBoard(msg)
         });
-
+        newHandButton.addEventListener('click', () => {
+                        const response = fetch('/start_game');
+                        // You can add more actions here
+                        newHandButton.style.display = 'none'
+                    })
     </script>
 
 </body>

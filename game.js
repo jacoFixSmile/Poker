@@ -7,13 +7,13 @@ function getRandomInt(max) {
 
 class Game {
     constructor(name) {
-        console.log("====game laun  ced====")
+        console.log("====game launch  ced====")
         this.id = null
         this.smallBlind = null
         this.name = name
         this.players = []
         this.hands = []
-        // set game settings, game mode, small bigg, start coins
+        // set game settings, game mode, small big, start coins
     }
     getOnlineGamePlayers() {
 
@@ -333,6 +333,7 @@ class Hand {
         let highestPair = pairs[0] || null;
         let secondPair = pairs[1] || null;
         // Hand Rankings (Higher number = Stronger hand)
+        //TODO link high card can't be the card that already is taken. E.g when a pair of aces wins the high card can't be an ace
         if (isFlush && isStraight && ranks.includes(14)) return { rank: 1000, name: "Royal Flush" };
         if (isFlush && isStraight) return { rank: (900 + highestStraight), name: `Straight Flush (High card: ${highestStraight})` };
         if (counts[0] === 4) return { rank: 800 + uniqueRanks.find(rank => rankCounts[rank] === 4)+(ranks[ranks.length - 1]/10), name: `Four of a Kind (High card: ${uniqueRanks.find(rank => rankCounts[rank] === 4)})` };

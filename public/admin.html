@@ -16,7 +16,9 @@
     <ul id="playersList"></ul>
     <div>
         <h1>⚙️ Game settings</h1>
-        <button onclick=" startGame()">Start game</button>
+        <button onclick="startGame()">Start game</button>
+        <button onclick="startHand()">New hand</button>
+
     </div>
     <script>
         window.onload = () => {
@@ -73,6 +75,11 @@
         socket.on('updateUsers', (msg) => {
             fetchPlayers()
         });
+        function startHand() {
+            console.log('starthand clicked')
+            const response =  fetch('/start_game');
+        }
+       
     </script>
 
 </body>

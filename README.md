@@ -52,6 +52,8 @@ Setting up termux on phone
     - [ ] Remove logging
 ### TODO
 * Extra class in game.js turn zodat elke turn appart word berekend ook als iemand all in doet halver wegen dat het tot daar vr die persoon word berekend.
+* Bugg als iemand zijn browser sluit tab sluit verlaat hij de game. Zien dat het ook zo gaat met personen in browser
+* Bugg meerdere tabs openen van localhost verstoort ook het systeem
 * Tonen welke spailer allemaal hebben gefold/raised
 ## Usefull
 * https://opengameart.org/content/colorful-poker-card-back
