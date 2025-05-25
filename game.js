@@ -53,7 +53,7 @@ class Game {
     }
     createHand() {
         console.log('Starting a set... for game:' + this.id);
-        const current_users = db.prepare(`SELECT ug.* FROM user_games ug inner join users u on u.id=ug.user_id and u.is_online =1 and game_id= ${this.id} order by user_id asc`);
+        const current_users = db.prepare(`SELECT ug.* FROM user_games ug inner join users u on u.id=ug.user_id and u.is_online =1 and game_id= ${this.id}  where ug.chips>0 order by user_id asc`);
         var users = current_users.all()
         var i = 0;
         var nextNotFound = true
@@ -66,7 +66,6 @@ class Game {
                 nextNotFound = false;
             }
             else if (users[i].user_id >= this.smallBlind) {
-                console.log('next small blind')
                 const nextPosition = (i + 1) % users.length;
                 this.smallBlind = users[nextPosition].user_id;
                 nextNotFound = false;
@@ -78,7 +77,6 @@ class Game {
         if (nextNotFound) {
             this.smallBlind = users[0].user_id;
         }
-        console.log('Smallblinde: ' + this.smallBlind)
         var new_hand = new Hand(users, this.id, this.smallBlind) // kunnen players zijn die in game zitten & algemeen online staan zo kunnen we een lijstje bekomen
         this.hands.push(new_hand)
 
@@ -133,36 +131,36 @@ class Hand {
             [
                 "2_of_clubs.png", "3_of_clubs.png", "4_of_clubs.png", "5_of_clubs.png",
                 "6_of_clubs.png", "7_of_clubs.png", "8_of_clubs.png", "9_of_clubs.png", "10_of_clubs.png",
-                "jack_of_clubs2.png","queen_of_clubs2.png",
-                "king_of_clubs2.png","ace_of_clubs.png"
+                "jack_of_clubs2.png", "queen_of_clubs2.png",
+                "king_of_clubs2.png", "ace_of_clubs.png"
             ],
             [
-                 "2_of_diamonds.png", "3_of_diamonds.png", "4_of_diamonds.png", "5_of_diamonds.png",
+                "2_of_diamonds.png", "3_of_diamonds.png", "4_of_diamonds.png", "5_of_diamonds.png",
                 "6_of_diamonds.png", "7_of_diamonds.png", "8_of_diamonds.png", "9_of_diamonds.png", "10_of_diamonds.png",
                 "jack_of_diamonds2.png", "queen_of_diamonds2.png",
-                "king_of_diamonds2.png","ace_of_diamonds.png",
+                "king_of_diamonds2.png", "ace_of_diamonds.png",
             ],
             [
                 "2_of_hearts.png", "3_of_hearts.png", "4_of_hearts.png", "5_of_hearts.png",
                 "6_of_hearts.png", "7_of_hearts.png", "8_of_hearts.png", "9_of_hearts.png", "10_of_hearts.png",
-                 "jack_of_hearts2.png", "queen_of_hearts2.png",
-                "king_of_hearts2.png","ace_of_hearts.png"
+                "jack_of_hearts2.png", "queen_of_hearts2.png",
+                "king_of_hearts2.png", "ace_of_hearts.png"
             ],
             [
                 "2_of_spades.png", "3_of_spades.png", "4_of_spades.png",
                 "5_of_spades.png", "6_of_spades.png", "7_of_spades.png", "8_of_spades.png", "9_of_spades.png",
-                "10_of_spades.png",  "jack_of_spades2.png", "queen_of_spades2.png",
-                "king_of_spades2.png","ace_of_spades.png"
+                "10_of_spades.png", "jack_of_spades2.png", "queen_of_spades2.png",
+                "king_of_spades2.png", "ace_of_spades.png"
             ]
         ]
         this.usedCards = []
         this.table = []
-        this.raised=false
-        this.raised_player=false
-        this.raised_amount=0
+        this.raised = false
+        this.raised_player = false
+        this.raised_amount = 0
         this.PlayerHands = []
         this.pot = 0
-        this.scores=null
+        this.scores = null
         this.startHand()
     }
     setNextActiveUser() {
@@ -179,20 +177,20 @@ class Hand {
             this.activeUser = userIds[currentIndex + 1];
         }
         // Set round
-        if(((this.activeUser===this.smallBlind && !this.raised ) || (this.raised_player===this.activeUser && this.raised )) & this.round===0){
-            this.round+=3
-            this.raised_amount=0
-            this.raised=false
-            this.raised_player=false
-        }else if(((this.activeUser===this.smallBlind && !this.raised ) || (this.raised_player===this.activeUser && this.raised )) & this.round===5){
-            this.scores=this.calculateWinner()
-        }else if(((this.activeUser===this.smallBlind && !this.raised ) || (this.raised_player===this.activeUser && this.raised )) ){
-            this.round+=1
-            this.raised_amount=0
-            this.raised=false
-            this.raised_player=false
-        }else if(this.raised_player===this.activeUser){
-            this.raised=false
+        if (((this.activeUser === this.smallBlind && !this.raised) || (this.raised_player === this.activeUser && this.raised)) & this.round === 0) {
+            this.round += 3
+            this.raised_amount = 0
+            this.raised = false
+            this.raised_player = false
+        } else if (((this.activeUser === this.smallBlind && !this.raised) || (this.raised_player === this.activeUser && this.raised)) & this.round === 5) {
+            this.scores = this.calculateWinner()
+        } else if (((this.activeUser === this.smallBlind && !this.raised) || (this.raised_player === this.activeUser && this.raised))) {
+            this.round += 1
+            this.raised_amount = 0
+            this.raised = false
+            this.raised_player = false
+        } else if (this.raised_player === this.activeUser) {
+            this.raised = false
 
         }
 
@@ -219,14 +217,7 @@ class Hand {
     getCardFromDeck(name) {
 
     }
-    printDeck() {
-        for (var i = 0; i < this.deck.length; i++) {
-            for (var j = 0; j < this.deck[i].length; j++) {
-                console.log(this.deck[i][j] + ' ' + [i] + ':' + [j]);
-            }
 
-        }
-    }
     makeTable() {
         console.log("Setting table")
         for (var i = 0; i < 5; i++) {
@@ -248,53 +239,79 @@ class Hand {
     }
     startHand() {
         this.makeTable()
-        console.log(this.table)
         // give player hands
         for (var i = 0; i < this.players.length; i++) {
             this.players[i]['hand'] = this.makePlayerHand()
-            console.log(this.players[i])
         }
-        console.log(this.board)
     }
     sortCards(cards) {
         return cards.sort((a, b) => a.rank - b.rank);
     }
     foldPlayer(id) {
-        this.players = this.players.filter(player => player.id !== id);
+        this.players = this.players.filter(player => player.id !== this.activeUser);
+        this.setNextActiveUser()
+    }
+    allIn(){
+        // game logic for all in
+        // set player amount to zero when smaller than amound raised otherwise check
         this.setNextActiveUser()
     }
     rais(amount) {
         // altijd vanuit gaan dat de huidige player raised
         this.pot += Number(amount)
-        this.raised=true
-        this.raised_player=this.activeUser
-        this.raised_amount=Number(amount)
+        this.raised = true
+        this.raised_player = this.activeUser
+        this.raised_amount = Number(amount)
+        // let insert = db.prepare('UPDATE user_games SET chips=chips-(?)  WHERE user_id=(?) and game_id=(?)');
+        // insert.run(amount,this.activeUser,this.gameId);
+        this.updateHandPlayerBudget(this.activeUser, amount)
+
         this.setNextActiveUser()
     }
     check() {
         this.setNextActiveUser()
     }
-    call(){
-        this.pot+=this.raised_amount
+    call() {
+        this.pot += this.raised_amount
+        // let insert = db.prepare('UPDATE user_games SET chips=chips-(?)  WHERE user_id=(?) and game_id=(?)');
+        // insert.run(this.raised_amount,this.activeUser,this.gameId);
+        this.updateHandPlayerBudget(this.activeUser, this.raised_amount)
         this.setNextActiveUser()
     }
     calculateWinner() {
-        console.log("start calculating winner")
-        var scores=[]
+        var scores = []
         for (var i = 0; i < this.players.length; i++) {
             var hand = this.players[i]['hand']
             var possible = this.table.concat(hand)
-            var score=this.evaluatePlayerHand(possible)
-            score.player=this.players[i]
+            var score = this.evaluatePlayerHand(possible)
+            score.player = this.players[i]
             scores.push(score)
 
         }
+        const highestRank = Math.max(...scores.map(score => Number(score.rank)));
+        const countHighestRank = scores.filter(score => Number(score.rank) === highestRank).length;
+        for (score in scores) {
+            if (highestRank === scores[score].rank) {
+                this.players.find(p => p.user_id === scores[score].player.user_id).chips += this.pot/countHighestRank;
+            }
+        }
+        this.persistPlayersBalanceToDB()
         return scores
     }
-    
+    persistPlayersBalanceToDB() {
+        this.players.forEach((player) => {
+            let insert = db.prepare('UPDATE user_games SET chips=(?)  WHERE user_id=(?) and game_id=(?)');
+            insert.run(player.chips,player.user_id,this.gameId);
+        })
+        //update the database user_games with the latest hand game balance
+    }
+    updateHandPlayerBudget(user_id, amount) {
+        console.log("updateHandPlayerBudget")
+        this.players.find(p => p.user_id === user_id).chips -= amount;
+
+        console.log(this.players)
+    }
     evaluatePlayerHand(hand) {
-        console.log('hand ranking')
-        console.log(hand)
         hand.sort((a, b) => a.rank - b.rank);  // Sort by rank
 
         const ranks = hand.map(card => card.rank);
@@ -303,16 +320,10 @@ class Hand {
 
         // Count how many times each rank appears
         ranks.forEach(rank => rankCounts[rank] = (rankCounts[rank] || 0) + 1);
-        console.log("ranks")
-        console.log(ranks)
-        console.log("suits")
-        console.log(suits)
-        console.log("rankCounts")
-        console.log(rankCounts)
+
         const counts = Object.values(rankCounts).sort((a, b) => b - a); // Get counts sorted descending
         const uniqueRanks = Object.keys(rankCounts).map(Number).sort((a, b) => a - b);
-        console.log("counts")
-        console.log(counts)
+
         const isFlush = new Set(suits).size === 1;  // If all suits are the same
         const isStraight = uniqueRanks.length === 5 && (uniqueRanks[4] - uniqueRanks[0] === 4 || (uniqueRanks.includes(14) && uniqueRanks.slice(0, 4).join(',') === "2,3,4,5")); // Handles Ace-low straight
 
@@ -336,20 +347,23 @@ class Hand {
         //TODO link high card can't be the card that already is taken. E.g when a pair of aces wins the high card can't be an ace
         if (isFlush && isStraight && ranks.includes(14)) return { rank: 1000, name: "Royal Flush" };
         if (isFlush && isStraight) return { rank: (900 + highestStraight), name: `Straight Flush (High card: ${highestStraight})` };
-        if (counts[0] === 4) return { rank: 800 + uniqueRanks.find(rank => rankCounts[rank] === 4)+(ranks[ranks.length - 1]/10), name: `Four of a Kind (High card: ${uniqueRanks.find(rank => rankCounts[rank] === 4)})` };
+        if (counts[0] === 4) return { rank: 800 + uniqueRanks.find(rank => rankCounts[rank] === 4) + (ranks[ranks.length - 1] / 10), name: `Four of a Kind (High card: ${uniqueRanks.find(rank => rankCounts[rank] === 4)})` };
         if (counts[0] === 3 && counts[1] === 2) return { rank: 700 + highestTriple * 3 + pairs[0] * 2, name: `Full House (Trips: ${highestTriple}, Pair: ${pairs[0]})` };
         if (isFlush) return { rank: 600, name: "Flush" };
         if (isStraight) return { rank: 500 + highestStraight, name: `Straight (High card: ${highestStraight})` };
-        if (counts[0] === 3) return { rank: 400 + highestTriple+(ranks[ranks.length - 1]/10), name: `Three of a Kind (High card: ${highestTriple})` };
-        if (pairs.length === 2) return { rank: 300 + highestPair + secondPair/10+(ranks[ranks.length - 1]/100), name: `Two Pair (Pair1: ${pairs[0]} & Pair2: ${pairs[1]})` };
-        if (pairs.length === 1) return { rank: 200 + pairs[0]+(ranks[ranks.length - 1]/10), name: `One Pair (High card: ${pairs[0]})` };
+        if (counts[0] === 3) return { rank: 400 + highestTriple + (ranks[ranks.length - 1] / 10), name: `Three of a Kind (High card: ${highestTriple})` };
+        if (pairs.length === 2) return { rank: 300 + highestPair + secondPair / 10 + (ranks[ranks.length - 1] / 100), name: `Two Pair (Pair1: ${pairs[0]} & Pair2: ${pairs[1]})` };
+        if (pairs.length === 1) return { rank: 200 + pairs[0] + (ranks[ranks.length - 1] / 10), name: `One Pair (High card: ${pairs[0]})` };
 
-        return { rank: 1+ranks[ranks.length - 1], name: `High Card (${ranks[ranks.length - 1]})` };
+        return { rank: 1 + ranks[ranks.length - 1], name: `High Card (${ranks[ranks.length - 1]})` };
     }
 
 
 }
- 
+
+
+
+/*
 class Player {
     constructor(id, name, chips) {
         this.id = id
@@ -358,8 +372,15 @@ class Player {
     }
 
 }
+    printDeckCmd() {
+        for (var i = 0; i < this.deck.length; i++) {
+            for (var j = 0; j < this.deck[i].length; j++) {
+                console.log(this.deck[i][j] + ' ' + [i] + ':' + [j]);
+            }
 
-/*
+        }
+    }
+
 testing game
 demo_game = new Game('demo_game')
 demo_game.addPlayer(new Player(1, "Daan", 2000))
@@ -390,4 +411,4 @@ rl.question(`What's your name?`, name => {
 });
 */
 
-module.exports = { Player, Game, Hand };
+module.exports = { Game, Hand };

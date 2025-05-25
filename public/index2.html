@@ -17,7 +17,9 @@
         <h1 id="welcome_sign">Welcome </h1>
         <h3 id="balance">balance: 0 </h3>
         <div class="game">
-            <div class="row around-xs" id="pot">
+            <div class="row around-xs" >
+                <div class="col-sm-2" id="pot"></div>
+                <div class="col-sm-2" id="raised_amount"></div>
             </div>
             <div id="board" class="row around-xs">
             </div>
@@ -29,10 +31,11 @@
                 <button id="check" class="button" onclick="handCheck()">Check</button>
                 <button id="call" class="button" onclick="handCall()">Call</button>
                 <button id="raise" onclick="handRaise()">Raise</button>
-                <label for="raise_slider" class="raise_label">Raise: <span id="raise_amount">$1</span></label>
+                <button id="all_in" onclick="handAllIn()">All in!</button>
+                <label for="raise_slider" class="raise_label" id="raise_label">Raise: <span id="raise_amount">$1</span></label>
                 <input type="range" min="1" max="100" value="1" class="slider" id="raise_slider">
                 <!-- <button id="call_fold">Fold/call</button> -->
-                <button id="fold">Fold</button>
+                <button id="fold" onclick="handFold()">Fold</button>
             </div>
 
             <div class="row around-xs" id="board_players">
@@ -66,7 +69,8 @@
                 // no user but on home page ERROR
             }
             document.getElementById('welcome_sign').innerHTML = ('Welcome ' + (JSON.parse(localStorage.getItem('user')).name))
-            document.getElementById('balance').innerHTML = ('Balance $' + (JSON.parse(localStorage.getItem('user')).chips))
+            //document.getElementById('balance').innerHTML = ('Balance $' + (JSON.parse(localStorage.getItem('user')).chips))
+            document.getElementById('balance').innerHTML = ('Balance $...')
             joinGame()
 
         }
@@ -81,6 +85,8 @@
         async function updateGameBoard(boardResponse) {
             let user = JSON.parse(localStorage.getItem("user"));
             const board = document.getElementById('board');
+            console.log(boardResponse)
+
             if (boardResponse.scores == null) {
                 board.innerHTML = '';
                 for (var i = 0; i < boardResponse.table.length; i++) {
@@ -100,11 +106,12 @@
                     card.classList.add('deck_card')
 
                     const pot = document.getElementById('pot');
-                    pot.innerHTML = "Pot: " + boardResponse.pot
+                    const raised_amount = document.getElementById('raised_amount');
+                    pot.textContent = "Pot: " + boardResponse.pot
+                    raised_amount.textContent='Raise: '+boardResponse.raised_amount
 
                     board.appendChild(card);
                 }
-                console.log(boardResponse)
                 // set active user
                 boardResponse.players.forEach(player => {
                     if (player.user_id == user.id) {
@@ -208,21 +215,33 @@
             });
 
             const raise_slider = document.getElementById('raise_slider');
-            console.log('raised:' + raised)
+            if(raisedAmount>=playerInfo.chips || playerInfo.chips<=0){
+                document.getElementById('check').style.display = "none";
+                document.getElementById('call').style.display = "none";
+                document.getElementById('raise').style.display = "none";
+                document.getElementById('raise_slider').style.display = "none";
+                document.getElementById('all_in').style.display = "block";
 
-            if (raised) {
+            }
+            else if (raised) {
+                document.getElementById('all_in').style.display = "none";
                 document.getElementById('check').style.display = "none";
                 document.getElementById('call').style.display = "block";
                 document.getElementById('raise_amount').textContent = '$' + raisedAmount
+                document.getElementById('raise').style.display = "block";
+                document.getElementById('raise_slider').style.display = "block";
                 raise_slider.min = raisedAmount
                 raise_slider.value = raisedAmount
 
             } else {
                 raise_slider.min = 0
                 raise_slider.value = 0
+                document.getElementById('all_in').style.display = "none";
                 document.getElementById('raise_amount').textContent = '$0'
                 document.getElementById('check').style.display = "block";
                 document.getElementById('call').style.display = "none";
+                document.getElementById('raise').style.display = "block";
+                document.getElementById('raise_slider').style.display = "block";
             }
             raise_slider.max = playerInfo.chips
 
@@ -233,9 +252,13 @@
 
 
         }
+        async function handAllIn(){
+            const response = await fetch(`/hand/all_in`, { method: 'POST' });
+            const players = await response.json();
+        }
         async function handFold() {
-
-
+            const response = await fetch(`/hand/all_in`, { method: 'POST' });
+            const players = await response.json();
         }
         async function handCall() {
             const response = await fetch(`/hand/call`, { method: 'POST' });
@@ -263,10 +286,10 @@
             updateGameBoard(msg)
         });
         newHandButton.addEventListener('click', () => {
-                        const response = fetch('/start_game');
-                        // You can add more actions here
-                        newHandButton.style.display = 'none'
-                    })
+            const response = fetch('/start_hand');
+            // You can add more actions here
+            newHandButton.style.display = 'none'
+        })
     </script>
 
 </body>

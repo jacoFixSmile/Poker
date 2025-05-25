@@ -2,7 +2,7 @@ const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const { Server } = require('socket.io');
-const { Player, Game, Set } = require('./game');
+const {  Game, Set } = require('./game');
 const { createServer } = require('node:http');
 const { DatabaseSync } = require('node:sqlite');
 const app = express();
@@ -100,9 +100,13 @@ app.get('/players/:id', async (req, res) => {
 
 });
 app.post('/hand/fold', async (req, res) => {
-    const { playerId } = req.body;
-    if (!playerId) return res.status(400).json({ error: 'Player is required' });
-    game.getLastHand().foldPlayer(playerId)
+    game.getLastHand().foldPlayer()
+    io.emit('updateGameBoard', game.getLastHand());
+
+
+});
+app.post('/hand/all_in', async (req, res) => {
+    game.getLastHand().allIn()
     io.emit('updateGameBoard', game.getLastHand());
 
 

@@ -5,7 +5,8 @@ As part of this excerise we try to minimize the amount of package/frameworks we 
 * axios: for API access between back and front-end
 * express: to render the front-end pages
 * socket: to make the game interactive. Tutorial https://socket.io/docs/v4/tutorial/step-3
-SQLITE https://nodejs.org/api/sqlite.html https://blog.logrocket.com/using-built-in-sqlite-module-node-js/
+* Minimal css framework for making it dynamic http://flexboxgrid.com/
+* Build in SQLITE from nodehttps://nodejs.org/api/sqlite.html https://blog.logrocket.com/using-built-in-sqlite-module-node-js/
 ## Installing
 Setting up termux on phone
 1. Install termux from git or playstore
