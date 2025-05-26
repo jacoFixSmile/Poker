@@ -1,5 +1,7 @@
 const { DatabaseSync } = require('node:sqlite');
 const db = new DatabaseSync('public/poker.db');
+const { evaluatePlayerHand } = require('./calculate_score.js');
+
 function getRandomInt(max) {
     return Math.floor(Math.random() * max);
 }
@@ -251,10 +253,15 @@ class Hand {
         this.players = this.players.filter(player => player.id !== this.activeUser);
         this.setNextActiveUser()
     }
-    allIn(){
+    allIn() {
+        let current_user_chips = this.players.filter(player => player.id !== this.activeUser).chips
+        if (current_user_chips <= 0) {
+            this.check()
+        } else {
+            this.rais(current_user_chips)
+        }
         // game logic for all in
         // set player amount to zero when smaller than amound raised otherwise check
-        this.setNextActiveUser()
     }
     rais(amount) {
         // altijd vanuit gaan dat de huidige player raised
@@ -283,7 +290,7 @@ class Hand {
         for (var i = 0; i < this.players.length; i++) {
             var hand = this.players[i]['hand']
             var possible = this.table.concat(hand)
-            var score = this.evaluatePlayerHand(possible)
+            var score = evaluatePlayerHand(possible)
             score.player = this.players[i]
             scores.push(score)
 
@@ -292,7 +299,7 @@ class Hand {
         const countHighestRank = scores.filter(score => Number(score.rank) === highestRank).length;
         for (score in scores) {
             if (highestRank === scores[score].rank) {
-                this.players.find(p => p.user_id === scores[score].player.user_id).chips += this.pot/countHighestRank;
+                this.players.find(p => p.user_id === scores[score].player.user_id).chips += this.pot / countHighestRank;
             }
         }
         this.persistPlayersBalanceToDB()
@@ -301,7 +308,7 @@ class Hand {
     persistPlayersBalanceToDB() {
         this.players.forEach((player) => {
             let insert = db.prepare('UPDATE user_games SET chips=(?)  WHERE user_id=(?) and game_id=(?)');
-            insert.run(player.chips,player.user_id,this.gameId);
+            insert.run(player.chips, player.user_id, this.gameId);
         })
         //update the database user_games with the latest hand game balance
     }
@@ -311,52 +318,7 @@ class Hand {
 
         console.log(this.players)
     }
-    evaluatePlayerHand(hand) {
-        hand.sort((a, b) => a.rank - b.rank);  // Sort by rank
-
-        const ranks = hand.map(card => card.rank);
-        const suits = hand.map(card => card.suit);
-        const rankCounts = {};  // Count occurrences of each rank
-
-        // Count how many times each rank appears
-        ranks.forEach(rank => rankCounts[rank] = (rankCounts[rank] || 0) + 1);
-
-        const counts = Object.values(rankCounts).sort((a, b) => b - a); // Get counts sorted descending
-        const uniqueRanks = Object.keys(rankCounts).map(Number).sort((a, b) => a - b);
-
-        const isFlush = new Set(suits).size === 1;  // If all suits are the same
-        const isStraight = uniqueRanks.length === 5 && (uniqueRanks[4] - uniqueRanks[0] === 4 || (uniqueRanks.includes(14) && uniqueRanks.slice(0, 4).join(',') === "2,3,4,5")); // Handles Ace-low straight
-
-        let pairs = [];
-        let highestTriple = null;
-        let highestStraight = isStraight ? uniqueRanks[uniqueRanks.length - 1] : null; // Highest card in straight
-
-        // Find the highest pair or triple
-        for (let rank in rankCounts) {
-            if (rankCounts[rank] === 2) {
-                pairs.push(Number(rank));
-            }
-            if (rankCounts[rank] === 3) {
-                highestTriple = Math.max(highestTriple || 0, Number(rank));
-            }
-        }
-        pairs.sort((a, b) => b - a); // Sort descending
-        let highestPair = pairs[0] || null;
-        let secondPair = pairs[1] || null;
-        // Hand Rankings (Higher number = Stronger hand)
-        //TODO link high card can't be the card that already is taken. E.g when a pair of aces wins the high card can't be an ace
-        if (isFlush && isStraight && ranks.includes(14)) return { rank: 1000, name: "Royal Flush" };
-        if (isFlush && isStraight) return { rank: (900 + highestStraight), name: `Straight Flush (High card: ${highestStraight})` };
-        if (counts[0] === 4) return { rank: 800 + uniqueRanks.find(rank => rankCounts[rank] === 4) + (ranks[ranks.length - 1] / 10), name: `Four of a Kind (High card: ${uniqueRanks.find(rank => rankCounts[rank] === 4)})` };
-        if (counts[0] === 3 && counts[1] === 2) return { rank: 700 + highestTriple * 3 + pairs[0] * 2, name: `Full House (Trips: ${highestTriple}, Pair: ${pairs[0]})` };
-        if (isFlush) return { rank: 600, name: "Flush" };
-        if (isStraight) return { rank: 500 + highestStraight, name: `Straight (High card: ${highestStraight})` };
-        if (counts[0] === 3) return { rank: 400 + highestTriple + (ranks[ranks.length - 1] / 10), name: `Three of a Kind (High card: ${highestTriple})` };
-        if (pairs.length === 2) return { rank: 300 + highestPair + secondPair / 10 + (ranks[ranks.length - 1] / 100), name: `Two Pair (Pair1: ${pairs[0]} & Pair2: ${pairs[1]})` };
-        if (pairs.length === 1) return { rank: 200 + pairs[0] + (ranks[ranks.length - 1] / 10), name: `One Pair (High card: ${pairs[0]})` };
-
-        return { rank: 1 + ranks[ranks.length - 1], name: `High Card (${ranks[ranks.length - 1]})` };
-    }
+    
 
 
 }

@@ -53,6 +53,7 @@ app.get('/start_game', (req, res) => {
 
 });
 app.get('/start_hand', (req, res) => {
+    console.log('Start hand still a little buggy so log when called')
     game.createHand()
     io.emit('updateGameBoard', game.getLastHand());
 
