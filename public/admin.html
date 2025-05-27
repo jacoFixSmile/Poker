@@ -96,8 +96,11 @@
             });
             const players = await response.json();
         }
-        async function loadGame(){
-var e = document.getElementById("ddlViewBy");
+        async function loadGame() {
+            var games_list = document.getElementById("games_list");
+            if (games_list.value != null) {
+                const response = await fetch(`/start_game/${games_list.value}`);
+            }
         }
         const socket = io();
 

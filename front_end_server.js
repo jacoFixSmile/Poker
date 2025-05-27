@@ -39,9 +39,9 @@ app.get('/lobby', (req, res) => {
 });
 //<=====================game managment=====================>
 app.get('/games_list', (req, res) => {
-    const limit = req.query.top  ?? 10
-    const offset =  req.query.offset  ?? 0
-    const query = database.prepare(`SELECT * FROM games order by id desc LIMIT ${limit} OFFSET ${offset}` );
+    const limit = req.query.top ?? 10
+    const offset = req.query.offset ?? 0
+    const query = database.prepare(`SELECT * FROM games order by id desc LIMIT ${limit} OFFSET ${offset}`);
     res.json(query.all())
 
 });
@@ -49,7 +49,7 @@ app.get('/games_list', (req, res) => {
 app.post('/start_game', (req, res) => {
     console.log("trying to contact lobby")
     console.log(req.body.name)
-    const  name  = req.body.name;
+    const name = req.body.name;
     io.emit('lobby', 'trying to contact lobby');
     game = new Game(name)
     game.saveGame()
@@ -60,6 +60,11 @@ app.post('/start_game', (req, res) => {
     io.emit('updateGameBoard', game.getLastHand());
 
 });
+app.get('/start_game/:id', async (req, res) => {
+    const id = req.params.id; // Get ID from URL
+    console.log('starting specifc game')
+    if (!id) return res.status(400).json({ error: 'Game ID is required' });
+})
 app.get('/start_hand', (req, res) => {
     console.log('Start hand still a little buggy so log when called')
     game.createHand()
