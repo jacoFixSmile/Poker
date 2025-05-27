@@ -8,18 +8,28 @@ function getRandomInt(max) {
 
 
 class Game {
-    constructor(name) {
+    constructor(name,id) {
         console.log("====game launch  ced====")
-        this.id = null
+        this.id = id
         this.smallBlind = null
         this.name = name
         this.players = []
         this.hands = []
         // set game settings, game mode, small big, start coins
     }
+    loadGameById(id){
+        const result = db.prepare(`SELECT * FROM games where id=${id}`);
+        var getResult=result.all()
+        if(getResult.length===1){
+            console.log(getResult[0])
+            this.name=getResult[0].name
+            this.id=getResult[0].id
+        }else{
+            throw new Error(`Game ID ${id} not found`);
+        }
+    }
     getOnlineGamePlayers() {
-
-        const result = database.prepare(`SELECT ug.* FROM user_games ug inner join users u on u.id=ug.user_id and u.is_online =1`);
+        const result = db.prepare(`SELECT ug.* FROM user_games ug inner join users u on u.id=ug.user_id and u.is_online =1`);
         return result.all()
 
     }

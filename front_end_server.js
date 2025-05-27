@@ -64,6 +64,19 @@ app.get('/start_game/:id', async (req, res) => {
     const id = req.params.id; // Get ID from URL
     console.log('starting specifc game')
     if (!id) return res.status(400).json({ error: 'Game ID is required' });
+    try {
+        game = new Game("dummy")
+        game.loadGameById(id)
+    } catch (e) {
+        console.error(e);
+        res.status(400).json({ error: e });
+
+    }
+    game.createHand()
+    io.emit('updateGameBoard', game.getLastHand());
+
+
+
 })
 app.get('/start_hand', (req, res) => {
     console.log('Start hand still a little buggy so log when called')

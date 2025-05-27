@@ -23,7 +23,7 @@ Setting up termux on phone
 - [X] Display cards
 - [X] Read data 
 - [ ] Player management:
-    - [X] Display plater
+    - [X] Display player
     - [ ] create a player 
         - [X] Post a player to the database
         - [X] Check the name isn't used
@@ -31,20 +31,21 @@ Setting up termux on phone
         - [X] Check if the browser all ready has a user, otherwhise ask to create one.
         - [X] 👑 Remove player for admin user
 - [ ] play a match of poker
-    - [ ] Dispay cards
+    - [x] Dispay cards
     => Voorkeur zou hier gaan naar hand met combinatie via db en back end maar lijkt ingewikeld. Daarom mss logica niveau afbaken tot op de js klassen & sql enkel de gegevens weglegoggen omdat het altijd intresant is om later statiesteken op te trekken
     - [X] Show actions
     - [x] Raise
     - [ ] Fold
-    - [ ] Check
-    - [ ] Show active player
+    - [X] Check
+    - [X] Show active player
     - [ ] 👑 reset game (save old csv if). How would you select a user when reloading a game?
-    - [ ] 👑 Add extra chips to a user  
+    - [X] 👑 Add extra chips to a user  
 - [ ] 👑 Admin account
     - [ ] Game modes:
         - [ ] central table: one phone is set in the middel of the table and all the players can look at there cards
         - [ ] All playing. The table is displayed on everyones phoen
-    - [ ] Check if there is a current file for users and save/load games based on csv in the folder.
+    - [x] Check if there is a current file for users and save/load games based on csv in the folder.
+    - [x] Delete a player
 - [ ] Cleanup
     -  [X] Make user first on a waiting lobby until the admin starts the game. Then user can select/create a user and the game starts
 - [ ] Check if it can run on Turmux  
