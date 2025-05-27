@@ -67,6 +67,7 @@
                 console.log("Existing user:", JSON.parse(user));
             } else {
                 // no user but on home page ERROR
+                window.location.href="lobby.html";
             }
             document.getElementById('welcome_sign').innerHTML = ('Welcome ' + (JSON.parse(localStorage.getItem('user')).name))
             //document.getElementById('balance').innerHTML = ('Balance $' + (JSON.parse(localStorage.getItem('user')).chips))

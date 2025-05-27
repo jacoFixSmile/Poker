@@ -13,7 +13,7 @@
 <body>
     <main>
         <h1 id="welcome_sign">Welcome </h1>
-        <form id="nameForm" onsubmit="addPlayer()" >
+        <form id="nameForm" onsubmit="addPlayer()">
             <label for="username">Enter your name:</label>
             <input type="text" id="username" required>
             <h4 class="error-text" style="display: none;" id="errMakeUser">error</h4>
@@ -60,14 +60,14 @@
                 nameForm.style.display = "none";
                 document.getElementById('welcome_sign').innerHTML = ('Welcome ' + (JSON.parse(localStorage.getItem('user')).name))
                 joinGame()
-                
+
             } else {
                 nameForm.style.display = "block";
             }
 
         }
         async function addPlayer() {
-            var name=document.getElementById('username').value
+            var name = document.getElementById('username').value
             if (!name) return; // User canceled prompt
 
             const response = await fetch('/players', {
@@ -86,7 +86,7 @@
                 console.error("Failed to create player");
                 console.log(newUser)
                 document.getElementById('errMakeUser').style.display = "block"
-                document.getElementById('errMakeUser').innerHTML = "Error: "+newUser.error
+                document.getElementById('errMakeUser').innerHTML = "Error: " + newUser.error
 
 
 
@@ -113,6 +113,13 @@
             console.log('refresh page')
             window.location.href = "/"
         });
+        socket.on('updateGameBoard', (msg) => {
+            let user = localStorage.getItem("user");
+            if (user && user !== "undefined") {
+                 window.location.href = "index2.html";
+            } 
+        });
+
     </script>
 
 </body>

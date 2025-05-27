@@ -1,4 +1,4 @@
-
+// high card maybe look at cards in hand?
 function getFrequencyMap(cards) {
     const rankCount = {};
     const suitCount = {};
