@@ -25,17 +25,17 @@ app.use(express.json());
 // Route for the homepage
 app.get('/', (req, res) => {
     if (game != undefined) {
-        res.sendFile(__dirname + '/Public/index2.html');
+        res.sendFile(__dirname + '/public/index2.html');
     } else {
-        res.sendFile(__dirname + '/Public/lobby.html');
+        res.sendFile(__dirname + '/public/lobby.html');
 
     }
 });
 app.get('/admin', (req, res) => {
-    res.sendFile(__dirname + '/Public/admin.html');
+    res.sendFile(__dirname + '/public/admin.html');
 });
 app.get('/lobby', (req, res) => {
-    res.sendFile(__dirname + '/Public/lobby.html');
+    res.sendFile(__dirname + '/public/lobby.html');
 });
 //<=====================game managment=====================>
 app.get('/games_list', (req, res) => {
