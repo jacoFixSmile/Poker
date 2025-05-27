@@ -16,14 +16,23 @@
     <ul id="playersList"></ul>
     <div>
         <h1>⚙️ Game settings</h1>
-        <button onclick="startGame()">Start game</button>
+        <div class="row">
+            <label for="game_name">Game name:</label>
+            <input type="text" id="game_name" value='game_name' placeholder="game_name" />
+            <button onclick="startGame()">Start new game</button>
+        </div>
+        <div class="row">
+            <label for="games_list">Load game:</label>
+            <select name="games" id="games_list"></select>
+            <button onclick="loadGame()">Load selected game</button>
+        </div>
         <button onclick="startHand()">New hand</button>
 
     </div>
     <script>
         window.onload = () => {
             fetchPlayers();
-
+            fetchGames();
 
         };
         async function fetchPlayers() {
@@ -48,6 +57,18 @@
                 list.appendChild(li);
             });
         }
+        async function fetchGames() {
+            console.log('fetchGames')
+            const response = await fetch('/games_list');
+            const games_list = await response.json();
+            const game_listHTML = document.getElementById('games_list');
+            games_list.forEach(game => {
+                let gameHTML = document.createElement('option')
+                gameHTML.value = game.id
+                gameHTML.textContent = game.id + '. ' + game.name + ': ' + game.creation_time
+                game_listHTML.appendChild(gameHTML)
+            });
+        }
         async function deletePlayer(id) {
             if (!confirm(`Are you sure you want to delete player ${id}?`)) return;
             await fetch(`/players/${id}`, { method: 'DELETE' });
@@ -67,8 +88,16 @@
             fetchPlayers(); // Refresh list after update
         }
         async function startGame() {
-            const response = await fetch('/start_game');
+            var game_name = document.getElementById('game_name').value;
+            const response = await fetch('/start_game', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: game_name })
+            });
             const players = await response.json();
+        }
+        async function loadGame(){
+var e = document.getElementById("ddlViewBy");
         }
         const socket = io();
 
@@ -77,9 +106,9 @@
         });
         function startHand() {
             console.log('starthand clicked')
-            const response =  fetch('/start_game');
+            const response = fetch('/start_game');
         }
-       
+
     </script>
 
 </body>

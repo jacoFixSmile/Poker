@@ -26,7 +26,9 @@ class Game {
     async saveGame() {
         return new Promise((resolve, reject) => {
             const query = db.prepare(`INSERT INTO games (name) VALUES (?) RETURNING Id`)
-            var run = query.run('testing')
+            console.log('game saving')
+            console.log(this.name)
+            var run = query.run(this.name)
             console.log(run)
             this.id = (run.lastInsertRowid)
             resolve(run.lastInsertRowid)

@@ -2,7 +2,7 @@ const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const { Server } = require('socket.io');
-const {  Game, Set } = require('./game');
+const { Game, Set } = require('./game');
 const { createServer } = require('node:http');
 const { DatabaseSync } = require('node:sqlite');
 const app = express();
@@ -38,12 +38,20 @@ app.get('/lobby', (req, res) => {
     res.sendFile(__dirname + '/Public/lobby.html');
 });
 //<=====================game managment=====================>
+app.get('/games_list', (req, res) => {
+    const limit = req.query.top  ?? 10
+    const offset =  req.query.offset  ?? 0
+    const query = database.prepare(`SELECT * FROM games order by id desc LIMIT ${limit} OFFSET ${offset}` );
+    res.json(query.all())
 
+});
 
-app.get('/start_game', (req, res) => {
+app.post('/start_game', (req, res) => {
     console.log("trying to contact lobby")
+    console.log(req.body.name)
+    const  name  = req.body.name;
     io.emit('lobby', 'trying to contact lobby');
-    game = new Game('demo_game')
+    game = new Game(name)
     game.saveGame()
     for (const [key, value] of Object.entries(users)) {
         game.addPlayer(value);
@@ -72,7 +80,7 @@ app.get('/get_game_board', (req, res) => {
 //<=====================player management=====================>
 // API route to get all players
 app.get('/players', (req, res) => {
-    const query = database.prepare('SELECT * FROM users');
+    const query = database.prepare('SELECT * FROM users WHERE is_deleted = 0');
     res.json(query.all())
 
 });
@@ -81,11 +89,11 @@ app.post('/players', async (req, res) => {
     const { name } = req.body;
     if (!name) return res.status(400).json({ error: 'Name is required' });
     // protection against sql insert needed
-    const query = database.prepare(`SELECT * FROM users where name like '${name}'`);
+    const query = database.prepare(`SELECT * FROM users where name like '${name}' AND is_deleted = 0`);
     if (query.all().length == 0) {
         const insert = database.prepare('INSERT INTO users (name) VALUES (?)');
         insert.run(name);
-        const result = database.prepare(`SELECT * FROM users where name like '${name}'`);
+        const result = database.prepare(`SELECT * FROM users where name like '${name}' AND  is_deleted = 0`);
         res.status(201).json(result.all());
     } else {
 
@@ -140,7 +148,7 @@ app.delete('/players/:id', async (req, res) => {
     if (!id) return res.status(400).json({ error: 'Player ID is required' });
 
     try {
-        const query = database.prepare('DELETE FROM users WHERE id = ?');
+        const query = database.prepare('UPDATE Users SET is_deleted=1 WHERE id = ?');
         const result = query.run(id);
 
         if (result.changes === 0) {

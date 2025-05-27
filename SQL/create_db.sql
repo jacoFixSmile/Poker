@@ -1,6 +1,7 @@
 CREATE TABLE users (
     id INTEGER PRIMARY KEY,
     is_online  INTEGER DEFAULT 0,
+    is_deleted INTEGER DEFAULT 0, -- Default to 0 (false)
     name TEXT
 );
 
