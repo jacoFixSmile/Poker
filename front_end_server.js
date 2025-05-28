@@ -11,6 +11,8 @@ const csvFilePath = path.join(__dirname, 'public', 'users.csv');
 //socket
 const server = createServer(app);
 const io = new Server(server);
+
+
 // database 
 const database = new DatabaseSync('public/poker.db');
 
@@ -217,7 +219,7 @@ io.on('connection', (socket) => {
     });
 });
 
-server.listen(3000, () => {
+server.listen(3000, '0.0.0.0', () => {
 
     console.log('Server running on http://localhost:3000');
 });
