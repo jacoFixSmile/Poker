@@ -125,6 +125,8 @@
                     document.getElementById('control').style.display = "none";
                 }
                 updatePlayerBoard(boardResponse.players, boardResponse.smallBlind, boardResponse.activeUser, user.id)
+                newHandButton.style.display = "none";
+
             } else {
                 displayWinnerStats(boardResponse.scores, user.id)
             }

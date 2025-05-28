@@ -8,7 +8,7 @@ function getRandomInt(max) {
 
 
 class Game {
-    constructor(name,id) {
+    constructor(name, id) {
         console.log("====game launch  ced====")
         this.id = id
         this.smallBlind = null
@@ -17,14 +17,14 @@ class Game {
         this.hands = []
         // set game settings, game mode, small big, start coins
     }
-    loadGameById(id){
+    loadGameById(id) {
         const result = db.prepare(`SELECT * FROM games where id=${id}`);
-        var getResult=result.all()
-        if(getResult.length===1){
+        var getResult = result.all()
+        if (getResult.length === 1) {
             console.log(getResult[0])
-            this.name=getResult[0].name
-            this.id=getResult[0].id
-        }else{
+            this.name = getResult[0].name
+            this.id = getResult[0].id
+        } else {
             throw new Error(`Game ID ${id} not found`);
         }
     }
@@ -191,6 +191,7 @@ class Hand {
             this.activeUser = userIds[currentIndex + 1];
         }
         // Set round
+        console.log((`this.raised_player ${this.raised_player} && this.activeUser ${this.activeUser}&&  this.raised ${this.raised}`))
         if (((this.activeUser === this.smallBlind && !this.raised) || (this.raised_player === this.activeUser && this.raised)) & this.round === 0) {
             this.round += 3
             this.raised_amount = 0
@@ -262,15 +263,21 @@ class Hand {
         return cards.sort((a, b) => a.rank - b.rank);
     }
     foldPlayer(id) {
-        this.players = this.players.filter(player => player.id !== this.activeUser);
+        this.players = this.players.filter(player => player.id === this.activeUser);
         this.setNextActiveUser()
     }
     allIn() {
-        let current_user_chips = this.players.filter(player => player.id !== this.activeUser).chips
+        console.log('allIn')
+        let current_user_chips = this.players.filter(player => player.user_id === this.activeUser)[0].chips
+        console.log(current_user_chips)
         if (current_user_chips <= 0) {
             this.check()
         } else {
-            this.rais(current_user_chips)
+            this.pot += Number(current_user_chips)
+            // let insert = db.prepare('UPDATE user_games SET chips=chips-(?)  WHERE user_id=(?) and game_id=(?)');
+            // insert.run(amount,this.activeUser,this.gameId);
+            this.updateHandPlayerBudget(this.activeUser, current_user_chips)
+            this.setNextActiveUser()
         }
         // game logic for all in
         // set player amount to zero when smaller than amound raised otherwise check
@@ -318,19 +325,20 @@ class Hand {
         return scores
     }
     persistPlayersBalanceToDB() {
+        console.log('persistPlayersBalanceToDB')
         this.players.forEach((player) => {
             let insert = db.prepare('UPDATE user_games SET chips=(?)  WHERE user_id=(?) and game_id=(?)');
             insert.run(player.chips, player.user_id, this.gameId);
+            console.log((player.chips+" | " +player.user_id+' | '+ this.gameId))
         })
         //update the database user_games with the latest hand game balance
     }
     updateHandPlayerBudget(user_id, amount) {
         console.log("updateHandPlayerBudget")
         this.players.find(p => p.user_id === user_id).chips -= amount;
-
         console.log(this.players)
     }
-    
+
 
 
 }
