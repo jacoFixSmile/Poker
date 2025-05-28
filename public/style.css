@@ -74,6 +74,8 @@ BUTTON {
 
 .blink_me {
   animation: blinker 1s linear infinite;
+  text-decoration: underline;
+
 }
 .blink_me.winner {
   border: 2px dotted gold;
@@ -85,4 +87,10 @@ BUTTON {
   50% {
     opacity: 0;
   }
+}
+
+.folded{
+  color: gray;
+  text-decoration: line-through;
+
 }

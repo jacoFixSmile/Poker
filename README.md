@@ -54,7 +54,7 @@ Setting up termux on phone
     - [ ] Remove logging
 ### TODO
 - [ ] Extra class in game.js turn zodat elke turn appart word berekend ook als iemand all in doet halver wegen dat het tot daar vr die persoon word berekend.
-- [ ] Na raisen gaat het nog een rontje te ver 
+- [x] Na raisen gaat het nog een rontje te ver 
 - [x] All in is bugged en kan NULL maken van pot en raised en zo ook de andere dwingen tot all in 
 - [ ] Click for new had verdwijdend niet als er meerdere gelijk gewonnen hebben
 - [x] Bugg als iemand zijn browser sluit tab sluit verlaat hij de game. Zien dat het ook zo gaat met personen in browser

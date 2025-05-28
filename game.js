@@ -67,7 +67,7 @@ class Game {
     }
     createHand() {
         console.log('Starting a set... for game:' + this.id);
-        const current_users = db.prepare(`SELECT ug.* FROM user_games ug inner join users u on u.id=ug.user_id and u.is_online =1 and game_id= ${this.id}  where ug.chips>0 order by user_id asc`);
+        const current_users = db.prepare(`SELECT ug.*,FALSE AS is_folded FROM user_games ug inner join users u on u.id=ug.user_id and u.is_online =1 and game_id= ${this.id}  where ug.chips>0 order by user_id asc`);
         var users = current_users.all()
         var i = 0;
         var nextNotFound = true
@@ -138,6 +138,7 @@ class Hand {
         this.id = null
         this.smallBlind = smallBlind
         this.activeUser = smallBlind
+        this.notFoldedSmallBlind = smallBlind
         this.players = players
         this.gameId = gameId
         this.round = 5
@@ -172,43 +173,45 @@ class Hand {
         this.raised = false
         this.raised_player = false
         this.raised_amount = 0
-        this.PlayerHands = []
         this.pot = 0
         this.scores = null
         this.startHand()
     }
     setNextActiveUser() {
-        let userIds = [];
-        for (let i = 0; i < this.players.length; i++) {
-            userIds.push(this.players[i].user_id);
-        }
+        console.log("setNextActiveUser")
+        const activePlayers = this.players.filter(p => !p.is_folded);
+
+        const userIds = activePlayers.map(p => p.user_id);
         const currentIndex = userIds.indexOf(this.activeUser);
-        // WERKT NOG NIET VOLLEDIG GOED ALS IEMAND RAISED MOET HET TERUG TOT DIE SPELER GAAN EN NIET TOT DE SMALL BLINED 
+        const isSmallBlindActive = userIds.includes(this.notFoldedSmallBlind);
+
+        console.log(userIds)
         // Set next user
         if (currentIndex === -1 || currentIndex === userIds.length - 1) {
             this.activeUser = userIds[0];
         } else {
             this.activeUser = userIds[currentIndex + 1];
         }
-        // Set round
+
         console.log((`this.raised_player ${this.raised_player} && this.activeUser ${this.activeUser}&&  this.raised ${this.raised}`))
-        if (((this.activeUser === this.smallBlind && !this.raised) || (this.raised_player === this.activeUser && this.raised)) & this.round === 0) {
+        if (((this.activeUser === this.notFoldedSmallBlind && !this.raised) || (this.raised_player === this.activeUser && this.raised)) & this.round === 0) {
             this.round += 3
             this.raised_amount = 0
             this.raised = false
             this.raised_player = false
-        } else if (((this.activeUser === this.smallBlind && !this.raised) || (this.raised_player === this.activeUser && this.raised)) & this.round === 5) {
+        } else if (((this.activeUser === this.notFoldedSmallBlind && !this.raised) || (this.raised_player === this.activeUser && this.raised)) & this.round === 5) {
             this.scores = this.calculateWinner()
-        } else if (((this.activeUser === this.smallBlind && !this.raised) || (this.raised_player === this.activeUser && this.raised))) {
+        } else if (((this.activeUser === this.notFoldedSmallBlind && !this.raised) || (this.raised_player === this.activeUser && this.raised))) {
             this.round += 1
             this.raised_amount = 0
             this.raised = false
             this.raised_player = false
         } else if (this.raised_player === this.activeUser) {
             this.raised = false
-
         }
-
+        if (!isSmallBlindActive) {
+            this.notFoldedSmallBlind = this.activeUser
+        }
 
     }
 
@@ -262,8 +265,8 @@ class Hand {
     sortCards(cards) {
         return cards.sort((a, b) => a.rank - b.rank);
     }
-    foldPlayer(id) {
-        this.players = this.players.filter(player => player.id === this.activeUser);
+    foldPlayer() {
+        this.players.filter(player => player.user_id === this.activeUser)[0].is_folded = 1;
         this.setNextActiveUser()
     }
     allIn() {
@@ -307,11 +310,13 @@ class Hand {
     calculateWinner() {
         var scores = []
         for (var i = 0; i < this.players.length; i++) {
-            var hand = this.players[i]['hand']
-            var possible = this.table.concat(hand)
-            var score = evaluatePlayerHand(possible)
-            score.player = this.players[i]
-            scores.push(score)
+            if (!this.players[i].is_folded) {
+                var hand = this.players[i]['hand']
+                var possible = this.table.concat(hand)
+                var score = evaluatePlayerHand(possible)
+                score.player = this.players[i]
+                scores.push(score)
+            }
 
         }
         const highestRank = Math.max(...scores.map(score => Number(score.rank)));
@@ -329,7 +334,7 @@ class Hand {
         this.players.forEach((player) => {
             let insert = db.prepare('UPDATE user_games SET chips=(?)  WHERE user_id=(?) and game_id=(?)');
             insert.run(player.chips, player.user_id, this.gameId);
-            console.log((player.chips+" | " +player.user_id+' | '+ this.gameId))
+            console.log((player.chips + " | " + player.user_id + ' | ' + this.gameId))
         })
         //update the database user_games with the latest hand game balance
     }

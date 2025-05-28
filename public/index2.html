@@ -189,6 +189,9 @@
                 if (player.user_id === activeUser) {
                     playerHtml.classList.add('blink_me');
                 }
+                if(player.is_folded===1){
+                    playerHtml.classList.add('folded');
+                }
                 playerHtml.id = 'user_id_' + player.user_id
                 playerHtml.classList.add('col-xs-5')
                 playerName.classList.add('row')
@@ -260,7 +263,7 @@
             const players = await response.json();
         }
         async function handFold() {
-            const response = await fetch(`/hand/all_in`, { method: 'POST' });
+            const response = await fetch(`/hand/fold`, { method: 'POST' });
             const players = await response.json();
         }
         async function handCall() {
@@ -289,7 +292,8 @@
             updateGameBoard(msg)
         });
         newHandButton.addEventListener('click', () => {
-            const response = fetch('/start_hand');
+            console.log('newHandButton clicked:'+new Date())
+            let response = fetch('/start_hand');
             // You can add more actions here
             newHandButton.style.display = 'none'
         })
