@@ -16,6 +16,7 @@ Setting up termux on phone
 5. pkg install python for the sqllite (3.12.9)
 6. Install git on termux
 7. git clone --branch mongodb_dependency https://github.com/jacoFixSmile/Poker.git
+7. Check IP address of phone on termux by running ipconfig. Find the part after "inet 192.168.230.136/3000"
 8. npm install && node  .\front_end_server.js
 .....
 ## Stories
