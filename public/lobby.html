@@ -107,7 +107,18 @@
                 socket.emit('join', user); // Send name to server so it can be added to the current game/hand
             }
         }
+        let clickCount = 0;
+        const secret = document.getElementById('welcome_sign');
 
+        secret.addEventListener('click', () => {
+            clickCount++;
+            if (clickCount === 5) {
+                alert('Forbidden action triggered!');
+                localStorage.clear();
+                window.location.href = "/";
+                clickCount = 0; // reset if needed
+            }
+        });
 
         socket.on('lobby', (msg) => {
             console.log('refresh page')
@@ -116,8 +127,8 @@
         socket.on('updateGameBoard', (msg) => {
             let user = localStorage.getItem("user");
             if (user && user !== "undefined") {
-                 window.location.href = "/";
-            } 
+                window.location.href = "/";
+            }
         });
 
     </script>
