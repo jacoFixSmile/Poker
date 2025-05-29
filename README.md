@@ -62,7 +62,7 @@ Setting up termux on phone
 - [ ] Bugg meerdere tabs openen van localhost verstoort ook het systeem
 - [X] Tonen welke spailer allemaal hebben gefold
 - [ ]  Tonen welke spailer allemaal hebben geraised
-- [ ] Het geld mag er direct moet er voor de speler direct afgaan ook bij de laatse beurt. 
+- [x] Het geld mag er direct moet er voor de speler direct afgaan ook bij de laatse beurt. 
 - [ ] Op mobile als je even uit de browser gaat naar andere app en dan opnieuw opend ommid hij niet goed, we moeten kunnen zien dat we dat ergens kunnen opgvangen. Mogelijks test scenario met hosten van PC en  
 - [ ] Er zit ergens een bugg in dat hij
 ## Usefull

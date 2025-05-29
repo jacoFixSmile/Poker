@@ -17,7 +17,7 @@
         <h1 id="welcome_sign">Welcome </h1>
         <h3 id="balance">balance: 0 </h3>
         <div class="game">
-            <div class="row around-xs" >
+            <div class="row around-xs">
                 <div class="col-sm-2" id="pot"></div>
                 <div class="col-sm-2" id="raised_amount"></div>
             </div>
@@ -32,7 +32,8 @@
                 <button id="call" class="button" onclick="handCall()">Call</button>
                 <button id="raise" onclick="handRaise()">Raise</button>
                 <button id="all_in" onclick="handAllIn()">All in!</button>
-                <label for="raise_slider" class="raise_label" id="raise_label">Raise: <span id="raise_amount">$1</span></label>
+                <label for="raise_slider" class="raise_label" id="raise_label">Raise: <span
+                        id="raise_amount">$1</span></label>
                 <input type="range" min="1" max="100" value="1" class="slider" id="raise_slider">
                 <!-- <button id="call_fold">Fold/call</button> -->
                 <button id="fold" onclick="handFold()">Fold</button>
@@ -67,7 +68,7 @@
                 console.log("Existing user:", JSON.parse(user));
             } else {
                 // no user but on home page ERROR
-                window.location.href="lobby.html";
+                window.location.href = "lobby.html";
             }
             document.getElementById('welcome_sign').innerHTML = ('Welcome ' + (JSON.parse(localStorage.getItem('user')).name))
             //document.getElementById('balance').innerHTML = ('Balance $' + (JSON.parse(localStorage.getItem('user')).chips))
@@ -109,16 +110,12 @@
                     const pot = document.getElementById('pot');
                     const raised_amount = document.getElementById('raised_amount');
                     pot.textContent = "Pot: " + boardResponse.pot
-                    raised_amount.textContent='Raise: '+boardResponse.raised_amount
+                    raised_amount.textContent = 'Raise: ' + boardResponse.raised_amount
 
                     board.appendChild(card);
                 }
                 // set active user
-                boardResponse.players.forEach(player => {
-                    if (player.user_id == user.id) {
-                        updatePlayerGameStats(player, boardResponse.activeUser, boardResponse.raised, boardResponse.raised_amount)
-                    }
-                });
+
                 if (user.id == boardResponse.activeUser) {
                     document.getElementById('control').style.display = "block";
                 } else {
@@ -128,8 +125,14 @@
                 newHandButton.style.display = "none";
 
             } else {
+
                 displayWinnerStats(boardResponse.scores, user.id)
             }
+            boardResponse.players.forEach(player => {
+                if (player.user_id == user.id) {
+                    updatePlayerGameStats(player, boardResponse.activeUser, boardResponse.raised, boardResponse.raised_amount)
+                }
+            });
         }
 
         function displayWinnerStats(scores, user) {
@@ -189,7 +192,7 @@
                 if (player.user_id === activeUser) {
                     playerHtml.classList.add('blink_me');
                 }
-                if(player.is_folded===1){
+                if (player.is_folded === 1) {
                     playerHtml.classList.add('folded');
                 }
                 playerHtml.id = 'user_id_' + player.user_id
@@ -221,7 +224,7 @@
             });
 
             const raise_slider = document.getElementById('raise_slider');
-            if(raisedAmount>=playerInfo.chips || playerInfo.chips<=0){
+            if (raisedAmount >= playerInfo.chips || playerInfo.chips <= 0) {
                 document.getElementById('check').style.display = "none";
                 document.getElementById('call').style.display = "none";
                 document.getElementById('raise').style.display = "none";
@@ -258,7 +261,7 @@
 
 
         }
-        async function handAllIn(){
+        async function handAllIn() {
             const response = await fetch(`/hand/all_in`, { method: 'POST' });
             const players = await response.json();
         }
@@ -292,7 +295,7 @@
             updateGameBoard(msg)
         });
         newHandButton.addEventListener('click', () => {
-            console.log('newHandButton clicked:'+new Date())
+            console.log('newHandButton clicked:' + new Date())
             let response = fetch('/start_hand');
             // You can add more actions here
             newHandButton.style.display = 'none'
